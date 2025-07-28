@@ -1,0 +1,11 @@
+Train Number,Train Name,Start Station,Start Station Code,End Station,End Station Code
+12345,Rajdhani Express,New Delhi,NDLS,Mumbai Central,MMCT
+12346,Shatabdi Express,Bangalore City,SBC,Chennai Central,MAS
+12347,Duronto Express,Howrah Junction,HWH,New Delhi,NDLS
+12348,Garib Rath,Patna Junction,PNBE,New Delhi,NDLS
+12349,Jan Shatabdi,Ahmedabad Junction,ADI,Mumbai Central,MMCT
+12350,Superfast Express,Kolkata,KOAA,Hyderabad Deccan,HYB
+12351,Express Train,Chennai Central,MAS,Bangalore City,SBC
+12352,Passenger Train,Pune Junction,PUNE,Mumbai Central,MMCT
+12353,Local Train,Secunderabad,SC,Hyderabad Deccan,HYB
+12354,Special Train,Jaipur Junction,JP,New Delhi,NDLS 

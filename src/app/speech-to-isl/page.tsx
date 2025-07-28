@@ -83,6 +83,7 @@ export default function SpeechToIslPage() {
     const { toast } = useToast();
     const recognitionRef = useRef<any>(null);
     const recordingRef = useRef(isRecording);
+    const isRecognitionActiveRef = useRef(false);
 
     useEffect(() => {
         recordingRef.current = isRecording;
@@ -165,11 +166,13 @@ export default function SpeechToIslPage() {
             recognition.onerror = (event: any) => {
                  if (event.error === 'aborted' || event.error === 'no-speech') {
                     console.log(`Speech recognition stopped: ${event.error}`);
-                    if (recordingRef.current) {
+                    if (recordingRef.current && !isRecognitionActiveRef.current) {
                         try {
+                           isRecognitionActiveRef.current = true;
                            recognition.start();
                         } catch(e) {
                            console.error("Error restarting recognition:", e)
+                           isRecognitionActiveRef.current = false;
                            setIsRecording(false);
                         }
                     } else {
@@ -184,15 +187,19 @@ export default function SpeechToIslPage() {
                     title: 'Speech Recognition Error',
                     description: `An error occurred: ${event.error}. Please ensure you have microphone permissions.`
                 });
+                isRecognitionActiveRef.current = false;
                 setIsRecording(false);
             };
             
             recognition.onend = () => {
-                if (recordingRef.current) {
+                isRecognitionActiveRef.current = false;
+                if (recordingRef.current && !isRecognitionActiveRef.current) {
                    try {
+                     isRecognitionActiveRef.current = true;
                      recognition.start();
                    } catch(e) {
                      console.error("Error restarting recognition onend:", e);
+                     isRecognitionActiveRef.current = false;
                      setIsRecording(false);
                    }
                 } else {
@@ -220,6 +227,7 @@ export default function SpeechToIslPage() {
     const handleMicClick = () => {
         if (isRecording) {
             recognitionRef.current?.stop();
+            isRecognitionActiveRef.current = false;
             setIsRecording(false);
         } else {
             setTranscribedText('');
@@ -228,9 +236,11 @@ export default function SpeechToIslPage() {
             setIslPlaylist([]);
             setIsRecording(true);
             try {
+              isRecognitionActiveRef.current = true;
               recognitionRef.current?.start();
             } catch (e) {
                 console.error("Could not start recognition:", e);
+                isRecognitionActiveRef.current = false;
                 setIsRecording(false);
             }
         }

@@ -12,6 +12,11 @@ import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { googleAI } from '@genkit-ai/googleai';
 import { SpeechClient } from '@google-cloud/speech';
+import { join } from 'path';
+
+// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable at module level
+const credentialsPath = join(process.cwd(), 'config', 'isl.json');
+process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
 
 const TranscribeAudioInputSchema = z.object({
   audioDataUri: z

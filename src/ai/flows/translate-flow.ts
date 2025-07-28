@@ -10,8 +10,14 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 import { TrainRoute, Translation } from '@/app/actions';
-import { TranslationServiceClient } from '@google-cloud/translate';
 import { googleAI } from '@genkit-ai/googleai';
+import { join } from 'path';
+import { readFileSync } from 'fs';
+import { Translate } from '@google-cloud/translate/build/src/v2';
+
+// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable at module level
+const credentialsPath = join(process.cwd(), 'config', 'isl.json');
+process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
 
 
 export async function translateText(text: string, targetLanguage: string, sourceLanguage: string): Promise<string> {
@@ -19,27 +25,28 @@ export async function translateText(text: string, targetLanguage: string, source
         return text;
     }
     
-    // The TranslationServiceClient will automatically use the credentials
-    // from the GOOGLE_APPLICATION_CREDENTIALS environment variable.
-    const translationClient = new TranslationServiceClient();
-    const projectId = (await translationClient.getProjectId());
-
     try {
-        const [response] = await translationClient.translateText({
-            parent: `projects/${projectId}/locations/global`,
-            contents: [text],
-            mimeType: 'text/plain',
-            sourceLanguageCode: sourceLanguage, // Explicitly set source language
-            targetLanguageCode: targetLanguage,
-        });
-
-        if (response.translations && response.translations.length > 0 && response.translations[0].translatedText) {
-            return response.translations[0].translatedText;
-        }
+        console.log(`Translating from ${sourceLanguage} to ${targetLanguage}: "${text}"`);
         
-        return text; 
+        // Set the GOOGLE_APPLICATION_CREDENTIALS environment variable
+        const credentialsPath = join(process.cwd(), 'config', 'isl.json');
+        process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
+        
+        console.log('Using GOOGLE_APPLICATION_CREDENTIALS:', credentialsPath);
+        
+        // Creates a client using the Translate class from @google-cloud/translate
+        const translate = new Translate();
+        
+        // Translates the text into the target language
+        const [translations] = await translate.translate(text, targetLanguage);
+        const translatedText = Array.isArray(translations) ? translations[0] : translations;
+        console.log('Translation result:', translatedText);
+        
+        return translatedText;
+        
     } catch (error) {
-        console.error(`Error during translation from '${sourceLanguage}' to '${targetLanguage}':`, error);
+        console.error(`Error during Google Cloud Translation from '${sourceLanguage}' to '${targetLanguage}':`, error);
+        console.log('Returning original text due to API error');
         return text;
     }
 }

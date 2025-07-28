@@ -3,6 +3,11 @@
 
 import { TextToSpeechClient } from '@google-cloud/text-to-speech';
 import { z } from 'zod';
+import { join } from 'path';
+
+// Set the GOOGLE_APPLICATION_CREDENTIALS environment variable at module level
+const credentialsPath = join(process.cwd(), 'config', 'isl.json');
+process.env.GOOGLE_APPLICATION_CREDENTIALS = credentialsPath;
 
 const client = new TextToSpeechClient();
 
