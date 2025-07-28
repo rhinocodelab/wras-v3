@@ -69,7 +69,7 @@ const IslVideoPlayer = ({ playlist }: { playlist: string[] }) => {
         <div className="flex flex-col h-full">
             <video
                 ref={videoRef}
-                className="w-full rounded-t-lg bg-black"
+                className="w-full h-full rounded-t-lg bg-black object-cover"
                 controls={false}
                 autoPlay
                 muted
@@ -78,9 +78,9 @@ const IslVideoPlayer = ({ playlist }: { playlist: string[] }) => {
                 <source src={playlist[0]} type="video/mp4" />
                 Your browser does not support the video tag.
             </video>
-            <div className="flex-grow p-4 bg-muted rounded-b-lg">
+            <div className="p-4 bg-muted rounded-b-lg">
                 <h3 className="font-semibold text-sm mb-2">ISL Video</h3>
-                <p className="text-xs text-muted-foreground">Playing stitched ISL announcement video</p>
+                <p className="text-xs text-muted-foreground">Playing ISL announcement video</p>
                 <div className="mt-2 text-xs text-muted-foreground break-all">
                    Video: {playlist[0].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
                 </div>
@@ -321,6 +321,10 @@ export function Dashboard() {
         <CardContent>
             <div className="space-y-4">
                 <div>
+                    <h3 className="text-md font-semibold mb-2">About the Application</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed mb-4">
+                        The Western Railway Divyangjan Announcement System is a web application designed to make travel more accessible for people who are deaf or hard of hearing. It delivers important train announcements using Indian Sign Language (ISL) videos, synchronized subtitles, and text notifications, ensuring equal access to real-time information at railway stations and on trains. This inclusive platform is built according to accessibility standards and aims to foster independence and confidence for Divyangjan passengers within the Western Railway network.
+                    </p>
                     <p className="text-muted-foreground text-sm">
                     Search for trains by number or name to quickly find a route.
                     </p>
@@ -456,13 +460,6 @@ export function Dashboard() {
                         </TabsContent>
                         </Tabs>
                     </div>
-                </div>
-                <Separator className="my-4" />
-                <div>
-                    <h3 className="text-md font-semibold mb-2">About the Application</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                        The Western Railway Divyangjan Announcement System is a web application designed to make travel more accessible for people who are deaf or hard of hearing. It delivers important train announcements using Indian Sign Language (ISL) videos, synchronized subtitles, and text notifications, ensuring equal access to real-time information at railway stations and on trains. This inclusive platform is built according to accessibility standards and aims to foster independence and confidence for Divyangjan passengers within the Western Railway network.
-                    </p>
                 </div>
             </div>
         </CardContent>
