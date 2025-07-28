@@ -175,7 +175,7 @@ main() {
     print_status "npm version: $(npm --version)"
     
     # Handle git operations (pull latest changes)
-    handle_git_operations
+    #handle_git_operations
     
     # Check if dependencies are installed
     if [ ! -d "node_modules" ]; then

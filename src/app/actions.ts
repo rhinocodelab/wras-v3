@@ -591,6 +591,43 @@ export async function clearAllAnnouncementTemplates() {
   }
 }
 
+async function stitchVideosWithFfmpeg(videoPaths: string[], outputFileName: string): Promise<string | null> {
+    if (videoPaths.length === 0) return null;
+    if (videoPaths.length === 1) return videoPaths[0]; // No need to stitch if only one video
+
+    try {
+        // Create output directory
+        const outputDir = path.join(process.cwd(), 'public', 'audio', '_announcements');
+        await fs.mkdir(outputDir, { recursive: true });
+        const outputPath = path.join(outputDir, outputFileName);
+        
+        // Create a temporary file list for ffmpeg
+        const tempListPath = path.join(outputDir, 'temp_video_list.txt');
+        const fileListContent = videoPaths
+            .map(videoPath => `file '${path.join(process.cwd(), 'public', videoPath)}'`)
+            .join('\n');
+        
+        await fs.writeFile(tempListPath, fileListContent);
+
+        // Use ffmpeg to concatenate videos
+        const { exec } = require('child_process');
+        const util = require('util');
+        const execAsync = util.promisify(exec);
+
+        const ffmpegCommand = `ffmpeg -f concat -safe 0 -i "${tempListPath}" -c copy "${outputPath}" -y`;
+        
+        await execAsync(ffmpegCommand);
+        
+        // Clean up temporary file
+        await fs.unlink(tempListPath).catch(() => {});
+        
+        return outputPath.replace(path.join(process.cwd(), 'public'), '');
+    } catch (error) {
+        console.error('Error stitching videos with ffmpeg:', error);
+        return null;
+    }
+}
+
 export async function getIslVideoPlaylist(text: string): Promise<string[]> {
     if (!text) return [];
 
@@ -627,7 +664,15 @@ export async function getIslVideoPlaylist(text: string): Promise<string[]> {
             i++;
         }
     }
-    return playlist;
+    
+    // Stitch videos into a single video
+    if (playlist.length > 0) {
+        const outputFileName = `isl_announcement_${Date.now()}.mp4`;
+        const stitchedVideo = await stitchVideosWithFfmpeg(playlist, outputFileName);
+        return stitchedVideo ? [stitchedVideo] : [];
+    }
+    
+    return [];
 }
 
 export async function handleGenerateAnnouncement(input: AnnouncementInput): Promise<AnnouncementOutput> {
@@ -670,7 +715,7 @@ export async function login(
       email: adminUser,
       name: 'Admin',
     };
-    cookies().set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
+    (await cookies()).set(SESSION_COOKIE_NAME, JSON.stringify(sessionData), {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       maxAge: 60 * 60 * 24, // 1 day
@@ -685,12 +730,12 @@ export async function login(
 }
 
 export async function logout() {
-  cookies().delete(SESSION_COOKIE_NAME);
+  (await cookies()).delete(SESSION_COOKIE_NAME);
   redirect('/login');
 }
 
 export async function getSession() {
-  const sessionCookie = cookies().get(SESSION_COOKIE_NAME);
+  const sessionCookie = (await cookies()).get(SESSION_COOKIE_NAME);
   if (!sessionCookie) {
     return null;
   }

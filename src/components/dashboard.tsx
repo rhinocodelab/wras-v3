@@ -47,25 +47,13 @@ const LANGUAGE_MAP: { [key: string]: string } = {
 
 
 const IslVideoPlayer = ({ playlist }: { playlist: string[] }) => {
-    const [currentVideo, setCurrentVideo] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        // Reset to first video when playlist changes
-        setCurrentVideo(0);
-    }, [playlist]);
-
-    const handleVideoEnd = () => {
-        if (currentVideo < playlist.length - 1) {
-            setCurrentVideo(currentVideo + 1);
-        }
-    };
-
-    useEffect(() => {
-        if (videoRef.current) {
+        if (videoRef.current && playlist.length > 0) {
             videoRef.current.play();
         }
-    }, [currentVideo, playlist]);
+    }, [playlist]);
 
     if (!playlist || playlist.length === 0) {
         return (
@@ -81,21 +69,20 @@ const IslVideoPlayer = ({ playlist }: { playlist: string[] }) => {
         <div className="flex flex-col h-full">
             <video
                 ref={videoRef}
-                key={playlist[currentVideo]}
                 className="w-full rounded-t-lg bg-black"
                 controls={false}
                 autoPlay
                 muted
-                onEnded={handleVideoEnd}
+                loop
             >
-                <source src={playlist[currentVideo]} type="video/mp4" />
+                <source src={playlist[0]} type="video/mp4" />
                 Your browser does not support the video tag.
             </video>
             <div className="flex-grow p-4 bg-muted rounded-b-lg">
-                <h3 className="font-semibold text-sm mb-2">ISL Video Sequence</h3>
-                <p className="text-xs text-muted-foreground">Playing video {currentVideo + 1} of {playlist.length}</p>
-                 <div className="mt-2 text-xs text-muted-foreground break-all">
-                   Current: {playlist[currentVideo].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
+                <h3 className="font-semibold text-sm mb-2">ISL Video</h3>
+                <p className="text-xs text-muted-foreground">Playing stitched ISL announcement video</p>
+                <div className="mt-2 text-xs text-muted-foreground break-all">
+                   Video: {playlist[0].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
                 </div>
             </div>
         </div>
@@ -261,15 +248,7 @@ export function Dashboard() {
           const audioPlayer = document.getElementById('announcement-audio');
           const videoPlaylist = ${videoSources};
           const audioPlaylist = ${audioSources};
-          let currentVideoIndex = 0;
           let currentAudioIndex = 0;
-
-          function playNextVideo() {
-            if (!videoElement || videoPlaylist.length === 0) return;
-            videoElement.src = videoPlaylist[currentVideoIndex];
-            videoElement.play().catch(e => console.error("Video play error:", e));
-            currentVideoIndex = (currentVideoIndex + 1) % videoPlaylist.length;
-          }
 
           function playNextAudio() {
             if (!audioPlayer || audioPlaylist.length === 0) return;
@@ -280,7 +259,9 @@ export function Dashboard() {
           
           function startPlayback() {
              if (videoPlaylist.length > 0) {
-                playNextVideo();
+                videoElement.src = videoPlaylist[0];
+                videoElement.loop = true;
+                videoElement.play().catch(e => console.error("Video play error:", e));
              }
              if (audioPlaylist.length > 0) {
                 audioPlayer.oncanplay = () => {
@@ -291,7 +272,6 @@ export function Dashboard() {
              }
           }
 
-          videoElement.addEventListener('ended', playNextVideo);
           audioPlayer.addEventListener('ended', playNextAudio);
           
           // Use a more reliable event to start playback

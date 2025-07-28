@@ -18,25 +18,13 @@ const LANGUAGE_OPTIONS: { [key: string]: string } = {
 };
 
 const IslVideoPlayer = ({ playlist, title }: { playlist: string[]; title: string }) => {
-    const [currentVideo, setCurrentVideo] = useState(0);
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
-        setCurrentVideo(0);
-    }, [playlist]);
-
-    const handleVideoEnd = () => {
-        if (currentVideo < playlist.length - 1) {
-            setCurrentVideo(currentVideo + 1);
-        } else {
-            // Loop back to the start
-            setCurrentVideo(0);
+        if (videoRef.current && playlist.length > 0) {
+            videoRef.current.play();
         }
-    };
-
-    useEffect(() => {
-        videoRef.current?.play();
-    }, [currentVideo, playlist]);
+    }, [playlist]);
 
     if (!playlist || playlist.length === 0) {
         return (
@@ -59,22 +47,21 @@ const IslVideoPlayer = ({ playlist, title }: { playlist: string[]; title: string
             <CardContent className="flex-grow flex flex-col p-2 pt-0">
                 <video
                     ref={videoRef}
-                    key={playlist[currentVideo]}
                     className="w-full rounded-t-md bg-black"
                     controls={false}
                     autoPlay
                     muted
-                    onEnded={handleVideoEnd}
+                    loop
                     playsInline
                 >
-                    <source src={playlist[currentVideo]} type="video/mp4" />
+                    <source src={playlist[0]} type="video/mp4" />
                     Your browser does not support the video tag.
                 </video>
                 <div className="flex-grow p-2 bg-muted rounded-b-md">
-                    <h3 className="font-semibold text-xs mb-1">ISL Video Sequence</h3>
-                    <p className="text-xs text-muted-foreground">Playing video {currentVideo + 1} of {playlist.length}</p>
+                    <h3 className="font-semibold text-xs mb-1">ISL Video</h3>
+                    <p className="text-xs text-muted-foreground">Playing stitched ISL video</p>
                     <div className="mt-1 text-xs text-muted-foreground break-all">
-                    Current: {playlist[currentVideo].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
+                    Video: {playlist[0].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
                     </div>
                 </div>
             </CardContent>
@@ -285,22 +272,15 @@ export default function SpeechToIslPage() {
             <script>
             const videoElement = document.getElementById('isl-video');
             const videoPlaylist = ${videoSources};
-            let currentVideoIndex = 0;
 
-            function playNextVideo() {
-                if (!videoElement || videoPlaylist.length === 0) return;
-                videoElement.src = videoPlaylist[currentVideoIndex];
-                videoElement.play().catch(e => console.error("Video play error:", e));
-                currentVideoIndex = (currentVideoIndex + 1) % videoPlaylist.length;
-            }
-            
             function startPlayback() {
                 if (videoPlaylist.length > 0) {
-                    playNextVideo();
+                    videoElement.src = videoPlaylist[0];
+                    videoElement.loop = true;
+                    videoElement.play().catch(e => console.error("Video play error:", e));
                 }
             }
 
-            videoElement.addEventListener('ended', playNextVideo);
             window.addEventListener('load', startPlayback, { once: true });
             <\/script>
         </body>
