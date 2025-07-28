@@ -157,7 +157,9 @@ export default function AudioFileToIslPage() {
                 
                 const result = await transcribeAndTranslateAudio(formData);
                 setTranscribedText(result.transcribedText);
-                setTranslatedText(result.translatedText);
+                // Add spaces between digits for translated text
+                const processedText = result.translatedText.replace(/(\d)/g, ' $1 ');
+                setTranslatedText(processedText);
             } catch (error) {
                 console.error("Audio processing failed:", error);
                 toast({

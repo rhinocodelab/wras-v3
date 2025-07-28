@@ -103,13 +103,17 @@ export default function TextToIslPage() {
         setIslPlaylist([]); 
         try {
             if (selectedLang === 'en') {
-                setTranslatedText(inputText);
+                // Add spaces between digits for English text
+                const processedText = inputText.replace(/(\d)/g, ' $1 ');
+                setTranslatedText(processedText);
             } else {
                 const formData = new FormData();
                 formData.append('text', inputText);
                 formData.append('lang', selectedLang);
                 const result = await translateInputText(formData);
-                setTranslatedText(result.translatedText);
+                // Add spaces between digits for translated text
+                const processedText = result.translatedText.replace(/(\d)/g, ' $1 ');
+                setTranslatedText(processedText);
             }
         } catch (error) {
             console.error("Translation failed:", error);

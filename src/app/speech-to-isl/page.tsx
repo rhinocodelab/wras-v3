@@ -112,13 +112,17 @@ export default function SpeechToIslPage() {
         setIslPlaylist([]); // Clear previous playlist
         try {
             if (selectedLang === 'en-US') {
-                setTranslatedText(textToTranslate);
+                // Add spaces between digits for English text
+                const processedText = textToTranslate.replace(/(\d)/g, ' $1 ');
+                setTranslatedText(processedText);
             } else {
                 const formData = new FormData();
                 formData.append('text', textToTranslate);
                 formData.append('lang', selectedLang.split('-')[0]);
                 const result = await translateSpeechText(formData);
-                setTranslatedText(result.translatedText);
+                // Add spaces between digits for translated text
+                const processedText = result.translatedText.replace(/(\d)/g, ' $1 ');
+                setTranslatedText(processedText);
             }
         } catch (error) {
             console.error("Translation failed:", error);
