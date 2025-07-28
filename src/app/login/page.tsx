@@ -13,7 +13,12 @@ export default async function LoginPage() {
     <main className="flex min-h-screen w-full items-center justify-center bg-gray-100 p-4">
       <div className="w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-2xl">
         <div className="flex flex-col md:flex-row">
-          <div className="flex w-full flex-col items-center justify-center bg-primary p-8 text-white md:w-1/2">
+          <div className="flex w-full flex-col items-center justify-center bg-primary p-8 text-white md:w-1/2 relative">
+            <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
+              <div className="text-3xl font-bold text-white/20 select-none">
+                POC DEMO
+              </div>
+            </div>
             <div className="text-center">
               <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
                 <TramFront className="h-6 w-6 text-white" />

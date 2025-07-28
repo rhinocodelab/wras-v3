@@ -465,6 +465,12 @@ export function Dashboard() {
         </CardContent>
       </Card>
 
+      <div className="flex items-center justify-center py-16">
+        <div className="text-6xl font-bold text-gray-200 select-none">
+          POC DEMO
+        </div>
+      </div>
+
       {displayedRoutes.length > 0 && (
         <Card className="mt-4">
             <CardHeader>

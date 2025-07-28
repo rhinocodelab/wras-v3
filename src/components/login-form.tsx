@@ -80,8 +80,9 @@ export function LoginForm() {
         <SubmitButton />
       </form>
       <div className="mt-3 p-2 bg-gray-50 border">
-        <p className="text-xs text-gray-600 mb-1 font-medium">Hint:</p>
-         <p className="text-xs text-gray-600">You can find the default credentials in the `.env` file.</p>
+        <p className="text-xs text-gray-600 mb-1 font-medium">Default Credentials:</p>
+         <p className="text-xs text-gray-600">Username: <span className="font-mono font-semibold">admin</span></p>
+         <p className="text-xs text-gray-600">Password: <span className="font-mono font-semibold">wras@dhh</span></p>
       </div>
     </div>
   );
