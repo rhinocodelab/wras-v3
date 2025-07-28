@@ -17,8 +17,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
-import { logout } from '@/app/actions';
 import { Dashboard } from '@/components/dashboard';
+import { LogoutButton } from '@/components/logout-button';
 import TrainRouteManagementPage from '@/app/train-route-management/page';
 import AiDatabasePage from '@/app/ai-database/page';
 import TranslationsPage from '@/app/ai-database/translations/page';
@@ -245,16 +245,7 @@ export default function HomePage() {
                   <span>Welcome, {session.name}</span>
                 </div>
               )}
-              <form action={logout}>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  type="submit"
-                  className="border-gray-300 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
-                >
-                  Sign Out
-                </Button>
-              </form>
+              <LogoutButton className="border-gray-300 hover:bg-destructive/10 hover:text-destructive hover:border-destructive" />
             </div>
           </header>
           <div className="flex flex-1 flex-col overflow-hidden">
