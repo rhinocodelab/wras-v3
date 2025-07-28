@@ -17,7 +17,7 @@ const LANGUAGE_OPTIONS: { [key: string]: string } = {
   'gu-IN': 'Gujarati',
 };
 
-const IslVideoPlayer = ({ playlist, title }: { playlist: string[]; title: string }) => {
+const IslVideoPlayer = ({ playlist, title, onPublish }: { playlist: string[]; title: string; onPublish?: () => void }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
 
     useEffect(() => {
@@ -47,7 +47,7 @@ const IslVideoPlayer = ({ playlist, title }: { playlist: string[]; title: string
             <CardContent className="flex-grow flex flex-col p-2 pt-0">
                 <video
                     ref={videoRef}
-                    className="w-full rounded-t-md bg-black"
+                    className="w-full h-64 rounded-t-md bg-black object-cover"
                     controls={false}
                     autoPlay
                     muted
@@ -57,12 +57,27 @@ const IslVideoPlayer = ({ playlist, title }: { playlist: string[]; title: string
                     <source src={playlist[0]} type="video/mp4" />
                     Your browser does not support the video tag.
                 </video>
-                <div className="flex-grow p-2 bg-muted rounded-b-md">
-                    <h3 className="font-semibold text-xs mb-1">ISL Video</h3>
-                    <p className="text-xs text-muted-foreground">Playing stitched ISL video</p>
-                    <div className="mt-1 text-xs text-muted-foreground break-all">
-                    Video: {playlist[0].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
+                <div className="flex-grow p-2 bg-muted rounded-b-md flex flex-col justify-between">
+                    <div>
+                        <h3 className="font-semibold text-xs mb-1">ISL Video</h3>
+                        <p className="text-xs text-muted-foreground">Playing ISL video</p>
+                        <div className="mt-1 text-xs text-muted-foreground break-all">
+                        Video: {playlist[0].split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ')}
+                        </div>
                     </div>
+                    {onPublish && playlist.length > 0 && (
+                        <div className="mt-4">
+                            <Button 
+                                onClick={onPublish} 
+                                className="w-full" 
+                                size="sm"
+                                disabled={playlist.length === 0}
+                            >
+                                <Rocket className="mr-2 h-4 w-4" />
+                                Publish Announcement
+                            </Button>
+                        </div>
+                    )}
                 </div>
             </CardContent>
         </Card>
@@ -320,20 +335,14 @@ export default function SpeechToIslPage() {
 
     return (
         <div className="w-full h-full flex flex-col">
-            <div className="flex items-center justify-between">
-                <div>
-                    <h1 className="text-lg font-semibold md:text-2xl flex items-center gap-2">
-                        <Speech className="h-6 w-6 text-primary" />
-                        Speech to ISL Converter
-                    </h1>
-                    <p className="text-muted-foreground">
-                        Select a language, speak, and see the ISL translation in real-time.
-                    </p>
-                </div>
-                 <Button onClick={handlePublish} disabled={!translatedText && !transcribedText}>
-                    <Rocket className="mr-2 h-4 w-4" />
-                    Publish Announcement
-                </Button>
+            <div>
+                <h1 className="text-lg font-semibold md:text-2xl flex items-center gap-2">
+                    <Speech className="h-6 w-6 text-primary" />
+                    Speech to ISL Converter
+                </h1>
+                <p className="text-muted-foreground">
+                    Select a language, speak, and see the ISL translation in real-time.
+                </p>
             </div>
 
             <Card className="mt-6">
@@ -437,7 +446,11 @@ export default function SpeechToIslPage() {
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
                          </div>
                      ) : (
-                        <IslVideoPlayer playlist={islPlaylist} title="ISL Video Output" />
+                        <IslVideoPlayer 
+                            playlist={islPlaylist} 
+                            title="ISL Video Output" 
+                            onPublish={handlePublish}
+                        />
                      )}
                 </div>
             </div>
