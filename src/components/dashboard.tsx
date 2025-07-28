@@ -200,10 +200,16 @@ export function Dashboard() {
     const { 'Train Name': trainName, 'Train Number': trainNumber, 'Start Station': startStation, 'End Station': endStation, 'Start Code': startCode, 'End Code': endCode } = currentRouteInfo;
 
     const tickerText = announcements.map(a => a.text).join(' &nbsp; | &nbsp; ');
-    const audioSources = JSON.stringify(announcements.map(a => a.audio_path).filter(p => p !== null));
     
-    // Convert relative video paths to absolute URLs
+    // Convert relative paths to absolute URLs
     const baseUrl = window.location.origin;
+    
+    // Convert audio paths to absolute URLs
+    const audioPaths = announcements.map(a => a.audio_path).filter(p => p !== null);
+    const absoluteAudioPaths = audioPaths.map(path => `${baseUrl}${path}`);
+    const audioSources = JSON.stringify(absoluteAudioPaths);
+    
+    // Convert video paths to absolute URLs
     const absoluteVideoPaths = isl_video_playlist.map(path => `${baseUrl}${path}`);
     const videoSources = JSON.stringify(absoluteVideoPaths);
 
@@ -253,12 +259,24 @@ export function Dashboard() {
           const videoPlaylist = ${videoSources};
           const audioPlaylist = ${audioSources};
           let currentAudioIndex = 0;
+          let isPlaying = false;
 
           function playNextAudio() {
             if (!audioPlayer || audioPlaylist.length === 0) return;
-            audioPlayer.src = audioPlaylist[currentAudioIndex];
-            audioPlayer.play().catch(e => console.error("Audio play error:", e));
-            currentAudioIndex = (currentAudioIndex + 1) % audioPlaylist.length;
+            
+            if (currentAudioIndex < audioPlaylist.length) {
+              audioPlayer.src = audioPlaylist[currentAudioIndex];
+              audioPlayer.play().catch(e => console.error("Audio play error:", e));
+              currentAudioIndex++;
+            } else {
+              // Reset to start for continuous loop
+              currentAudioIndex = 0;
+              setTimeout(() => {
+                if (isPlaying) {
+                  playNextAudio();
+                }
+              }, 1000); // 1 second pause before restarting
+            }
           }
           
           function startPlayback() {
@@ -268,6 +286,7 @@ export function Dashboard() {
                 videoElement.play().catch(e => console.error("Video play error:", e));
              }
              if (audioPlaylist.length > 0) {
+                isPlaying = true;
                 audioPlayer.oncanplay = () => {
                     audioPlayer.play().catch(e => console.error("Audio play error:", e));
                     audioPlayer.oncanplay = null; // Prevent re-triggering
