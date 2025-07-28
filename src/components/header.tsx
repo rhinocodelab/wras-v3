@@ -20,7 +20,7 @@ export function Header({ session }: HeaderProps) {
           </div>
         )}
         <form action={logout}>
-          <Button variant="outline" size="sm" type="submit">
+          <Button variant="outline" size="sm" type="submit" className="border-gray-300">
             <LogOut className="h-4 w-4" />
             <span className="sr-only">Sign Out</span>
           </Button>

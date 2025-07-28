@@ -325,7 +325,7 @@ export function Dashboard() {
                     <p className="text-sm text-muted-foreground leading-relaxed mb-4">
                         The Western Railway Divyangjan Announcement System is a web application designed to make travel more accessible for people who are deaf or hard of hearing. It delivers important train announcements using Indian Sign Language (ISL) videos, synchronized subtitles, and text notifications, ensuring equal access to real-time information at railway stations and on trains. This inclusive platform is built according to accessibility standards and aims to foster independence and confidence for Divyangjan passengers within the Western Railway network.
                     </p>
-                    <p className="text-muted-foreground text-sm">
+                    <p className="text-black font-bold text-base">
                     Search for trains by number or name to quickly find a route.
                     </p>
                     <div className="w-full">
@@ -349,7 +349,7 @@ export function Dashboard() {
                             <Button onClick={handleSearchByNumber}>Search</Button>
                             <Dialog open={isRouteModalOpen} onOpenChange={setIsRouteModalOpen}>
                                 <DialogTrigger asChild>
-                                    <Button variant="secondary" onClick={() => setSelectedRoutes([])}>Pick Route</Button>
+                                    <Button variant="secondary" onClick={() => setSelectedRoutes([])} disabled={allRoutes.length === 0}>Pick Route</Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-2xl">
                                     <DialogHeader>
@@ -393,7 +393,7 @@ export function Dashboard() {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
-                            <Button variant="ghost" onClick={clearSearch}>Clear</Button>
+                            <Button variant="outline" onClick={clearSearch}>Clear</Button>
                             </div>
                         </TabsContent>
                         <TabsContent value="train-name">
@@ -411,7 +411,7 @@ export function Dashboard() {
                             <Button onClick={handleSearchByName}>Search</Button>
                             <Dialog open={isRouteModalOpen} onOpenChange={setIsRouteModalOpen}>
                                 <DialogTrigger asChild>
-                                    <Button variant="secondary" onClick={() => setSelectedRoutes([])}>Pick Route</Button>
+                                    <Button variant="secondary" onClick={() => setSelectedRoutes([])} disabled={allRoutes.length === 0}>Pick Route</Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-2xl">
                                     <DialogHeader>
@@ -455,7 +455,7 @@ export function Dashboard() {
                                     </DialogFooter>
                                 </DialogContent>
                             </Dialog>
-                            <Button variant="ghost" onClick={clearSearch}>Clear</Button>
+                            <Button variant="outline" onClick={clearSearch}>Clear</Button>
                             </div>
                         </TabsContent>
                         </Tabs>

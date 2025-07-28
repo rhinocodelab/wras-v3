@@ -250,7 +250,7 @@ export default function HomePage() {
                   variant="outline"
                   size="sm"
                   type="submit"
-                  className="hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
+                  className="border-gray-300 hover:bg-destructive/10 hover:text-destructive hover:border-destructive"
                 >
                   Sign Out
                 </Button>
