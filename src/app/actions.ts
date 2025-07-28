@@ -680,7 +680,9 @@ export async function handleGenerateAnnouncement(input: AnnouncementInput): Prom
   
   const englishAnnouncement = announcementData.announcements.find(a => a.language_code === 'en');
   if (englishAnnouncement && englishAnnouncement.text) {
-      announcementData.isl_video_playlist = await getIslVideoPlaylist(englishAnnouncement.text);
+      // Add spaces between digits for ISL video generation
+      const processedText = englishAnnouncement.text.replace(/(\d)/g, ' $1 ');
+      announcementData.isl_video_playlist = await getIslVideoPlaylist(processedText);
   } else {
       announcementData.isl_video_playlist = [];
   }
