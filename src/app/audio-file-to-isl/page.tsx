@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Loader2, Languages, MessageSquare, Video, FileAudio, Film, Rocket, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { transcribeAndTranslateAudio, getIslVideoPlaylist } from '@/app/actions';
@@ -80,6 +81,7 @@ export default function AudioFileToIslPage() {
     const [islPlaylist, setIslPlaylist] = useState<string[]>([]);
     const [isProcessing, setIsProcessing] = useState(false);
     const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+    const [isTranscribing, setIsTranscribing] = useState(false);
 
     const { toast } = useToast();
 
@@ -123,14 +125,15 @@ export default function AudioFileToIslPage() {
     const handleProcessAudio = useCallback(async () => {
         if (!audioFile) return;
 
-        setIsProcessing(true);
+        setIsTranscribing(true);
         setTranscribedText('');
         setTranslatedText('');
         setIslPlaylist([]);
-        try {
-            const reader = new FileReader();
-            reader.readAsDataURL(audioFile);
-            reader.onloadend = async () => {
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(audioFile);
+        reader.onloadend = async () => {
+            try {
                 const base64Audio = reader.result as string;
                 
                 const formData = new FormData();
@@ -140,18 +143,17 @@ export default function AudioFileToIslPage() {
                 const result = await transcribeAndTranslateAudio(formData);
                 setTranscribedText(result.transcribedText);
                 setTranslatedText(result.translatedText);
-            };
-            
-        } catch (error) {
-            console.error("Audio processing failed:", error);
-            toast({
-                variant: "destructive",
-                title: "Processing Error",
-                description: "Failed to transcribe or translate the audio file."
-            });
-        } finally {
-            setIsProcessing(false);
-        }
+            } catch (error) {
+                console.error("Audio processing failed:", error);
+                toast({
+                    variant: "destructive",
+                    title: "Processing Error",
+                    description: "Failed to transcribe or translate the audio file."
+                });
+            } finally {
+                setIsTranscribing(false);
+            }
+        };
     }, [audioFile, selectedLang, toast]);
 
     const handleGenerateVideoClick = useCallback(async () => {
@@ -304,9 +306,9 @@ export default function AudioFileToIslPage() {
                         </label>
                     </div>
 
-                    <Button onClick={handleProcessAudio} disabled={isProcessing || !audioFile}>
-                        {isProcessing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Languages className="mr-2 h-4 w-4"/>}
-                        {isProcessing ? "Processing..." : "Transcribe & Translate"}
+                    <Button onClick={handleProcessAudio} disabled={isTranscribing || !audioFile}>
+                        {isTranscribing ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Languages className="mr-2 h-4 w-4"/>}
+                        {isTranscribing ? "Processing..." : "Transcribe & Translate"}
                     </Button>
                 </CardContent>
             </Card>
@@ -378,6 +380,22 @@ export default function AudioFileToIslPage() {
                      )}
                 </div>
             </div>
+
+            {/* Progress Modal for Transcription */}
+            <Dialog open={isTranscribing}>
+                <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>Transcribing & Translating Audio</DialogTitle>
+                        <DialogDescription>
+                            Please wait while the audio file is being transcribed and translated. This may take a moment.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="flex flex-col gap-4 py-4 items-center">
+                        <Loader2 className="h-10 w-10 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Processing audio file...</p>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
