@@ -12,9 +12,9 @@ import { translateInputText, getIslVideoPlaylist } from '@/app/actions';
 
 const LANGUAGE_OPTIONS: { [key: string]: string } = {
   'en': 'English',
-  'hi': 'Hindi',
-  'mr': 'Marathi',
-  'gu': 'Gujarati',
+  'hi': 'हिंदी',
+  'mr': 'मराठी',
+  'gu': 'ગુજરાતી',
 };
 
 const IslVideoPlayer = ({ playlist, title, onPublish }: { playlist: string[]; title: string; onPublish?: () => void }) => {

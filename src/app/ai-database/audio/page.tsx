@@ -18,9 +18,9 @@ import { Loader2, ChevronRight, Music, Languages } from 'lucide-react';
 
 const LANGUAGE_MAP: { [key: string]: string } = {
   'en': 'English',
-  'mr': 'Marathi',
-  'hi': 'Hindi',
-  'gu': 'Gujarati',
+  'mr': 'मराठी',
+  'hi': 'हिंदी',
+  'gu': 'ગુજરાતી',
 };
 
 const RECORDS_PER_PAGE = 5;

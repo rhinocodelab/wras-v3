@@ -40,9 +40,9 @@ type FullAnnouncement = {
 const ANNOUNCEMENT_CATEGORIES = ['Arriving', 'Delay', 'Cancelled', 'Platform_Change'];
 const LANGUAGE_MAP: { [key: string]: string } = {
   'en': 'English',
-  'mr': 'Marathi',
-  'hi': 'Hindi',
-  'gu': 'Gujarati',
+  'mr': 'मराठी',
+  'hi': 'हिंदी',
+  'gu': 'ગુજરાતી',
 };
 
 

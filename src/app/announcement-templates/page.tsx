@@ -43,18 +43,18 @@ import { Upload, Loader2, ClipboardList, Volume2 } from 'lucide-react';
 import { getAnnouncementTemplates, saveAnnouncementTemplate, Template, clearAllAnnouncementTemplates, generateAndSaveTemplateAudio } from '@/app/actions';
 
 const ANNOUNCEMENT_CATEGORIES = ['Arriving', 'Delay', 'Cancelled', 'Platform_Change'];
-const LANGUAGES = ['English', 'Hindi', 'Marathi', 'Gujarati'];
+const LANGUAGES = ['English', 'हिंदी', 'मराठी', 'ગુજરાતી'];
 const LANGUAGE_CODES: { [key: string]: string } = {
     'English': 'en',
-    'Hindi': 'hi',
-    'Marathi': 'mr',
-    'Gujarati': 'gu'
+    'हिंदी': 'hi',
+    'मराठी': 'mr',
+    'ગુજરાતી': 'gu'
 };
 const LANGUAGE_MAP: { [key: string]: string } = {
   'en': 'English',
-  'mr': 'Marathi',
-  'hi': 'Hindi',
-  'gu': 'Gujarati',
+  'mr': 'मराठी',
+  'hi': 'हिंदी',
+  'gu': 'ગુજરાતી',
 };
 
 
@@ -396,13 +396,13 @@ export default function AnnouncementTemplatesPage() {
                                 <TableCell className="text-center">
                                    <div className="flex gap-1 justify-center">
                                         <DialogTrigger asChild>
-                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(getTemplate(category, 'Hindi'))} disabled={!getTemplate(category, 'Hindi')}>HI</Button>
+                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(getTemplate(category, 'हिंदी'))} disabled={!getTemplate(category, 'हिंदी')}>हि</Button>
                                         </DialogTrigger>
                                         <DialogTrigger asChild>
-                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(getTemplate(category, 'Marathi'))} disabled={!getTemplate(category, 'Marathi')}>MR</Button>
+                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(getTemplate(category, 'मराठी'))} disabled={!getTemplate(category, 'मराठी')}>म</Button>
                                         </DialogTrigger>
                                         <DialogTrigger asChild>
-                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(getTemplate(category, 'Gujarati'))} disabled={!getTemplate(category, 'Gujarati')}>GU</Button>
+                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(getTemplate(category, 'ગુજરાતી'))} disabled={!getTemplate(category, 'ગુજરાતી')}>ગ</Button>
                                         </DialogTrigger>
                                     </div>
                                 </TableCell>

@@ -14,9 +14,9 @@ import { Input } from '@/components/ui/input';
 
 const LANGUAGE_OPTIONS: { [key: string]: string } = {
   'en-US': 'English',
-  'hi-IN': 'Hindi',
-  'mr-IN': 'Marathi',
-  'gu-IN': 'Gujarati',
+  'hi-IN': 'हिंदी',
+  'mr-IN': 'मराठी',
+  'gu-IN': 'ગુજરાતી',
 };
 
 const IslVideoPlayer = ({ playlist, title, onPublish }: { playlist: string[]; title: string; onPublish?: () => void }) => {

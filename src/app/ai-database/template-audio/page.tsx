@@ -16,9 +16,9 @@ import { Loader2, ChevronRight, Speaker, Languages } from 'lucide-react';
 
 const LANGUAGE_MAP: { [key: string]: string } = {
   'en': 'English',
-  'mr': 'Marathi',
-  'hi': 'Hindi',
-  'gu': 'Gujarati',
+  'mr': 'मराठी',
+  'hi': 'हिंदी',
+  'gu': 'ગુજરાતી',
 };
 
 export default function TemplateAudioPage({ onViewChange }: { onViewChange: (view: string) => void }) {

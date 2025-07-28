@@ -43,9 +43,9 @@ import { Loader2, ChevronRight, Volume2, Trash2 } from 'lucide-react';
 
 const LANGUAGE_MAP: { [key: string]: string } = {
   'en': 'English',
-  'mr': 'Marathi',
-  'hi': 'Hindi',
-  'gu': 'Gujarati',
+  'mr': 'मराठी',
+  'hi': 'हिंदी',
+  'gu': 'ગુજરાતી',
 };
 
 const RECORDS_PER_PAGE = 5;
@@ -222,11 +222,11 @@ export default function TranslationsPage({ onViewChange }: { onViewChange: (view
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <DialogTrigger asChild>
-                                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(item, 'hi')}>HI</Button>
+                                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(item, 'hi')}>हि</Button>
                                                         </DialogTrigger>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Hindi</p>
+                                                        <p>हिंदी</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -234,11 +234,11 @@ export default function TranslationsPage({ onViewChange }: { onViewChange: (view
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <DialogTrigger asChild>
-                                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(item, 'mr')}>MR</Button>
+                                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(item, 'mr')}>म</Button>
                                                         </DialogTrigger>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Marathi</p>
+                                                        <p>मराठी</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
@@ -246,11 +246,11 @@ export default function TranslationsPage({ onViewChange }: { onViewChange: (view
                                                 <Tooltip>
                                                     <TooltipTrigger asChild>
                                                         <DialogTrigger asChild>
-                                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(item, 'gu')}>GU</Button>
+                                                            <Button variant="outline" size="xs" onClick={() => handleOpenModal(item, 'gu')}>ગ</Button>
                                                         </DialogTrigger>
                                                     </TooltipTrigger>
                                                     <TooltipContent>
-                                                        <p>Gujarati</p>
+                                                        <p>ગુજરાતી</p>
                                                     </TooltipContent>
                                                 </Tooltip>
                                             </TooltipProvider>
