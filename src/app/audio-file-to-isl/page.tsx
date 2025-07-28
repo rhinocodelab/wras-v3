@@ -189,7 +189,11 @@ export default function AudioFileToIslPage() {
         if (!translatedText && !transcribedText) return;
 
         const tickerText = [transcribedText, translatedText].filter(Boolean).join(' &nbsp; | &nbsp; ');
-        const videoSources = JSON.stringify(islPlaylist);
+        
+        // Convert relative video paths to absolute URLs
+        const baseUrl = window.location.origin;
+        const absoluteVideoPaths = islPlaylist.map(path => `${baseUrl}${path}`);
+        const videoSources = JSON.stringify(absoluteVideoPaths);
 
         const htmlContent = `
         <!DOCTYPE html>

@@ -4,8 +4,8 @@ import { Toaster } from "@/components/ui/toaster";
 
 
 export const metadata: Metadata = {
-  title: 'Railway Sign-In',
-  description: 'Sign in to access the railway dashboard.',
+  title: 'WRAS-DDH',
+  description: 'Western Railway Announcement System for Deaf and Hard of Hearing',
 };
 
 export default function RootLayout({

@@ -201,7 +201,11 @@ export function Dashboard() {
 
     const tickerText = announcements.map(a => a.text).join(' &nbsp; | &nbsp; ');
     const audioSources = JSON.stringify(announcements.map(a => a.audio_path).filter(p => p !== null));
-    const videoSources = JSON.stringify(isl_video_playlist);
+    
+    // Convert relative video paths to absolute URLs
+    const baseUrl = window.location.origin;
+    const absoluteVideoPaths = isl_video_playlist.map(path => `${baseUrl}${path}`);
+    const videoSources = JSON.stringify(absoluteVideoPaths);
 
     const htmlContent = `
       <!DOCTYPE html>
