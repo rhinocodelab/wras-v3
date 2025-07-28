@@ -1,0 +1,2 @@
+# This file ensures the config folder is tracked in git
+# The isl.json file is ignored for security reasons 
