@@ -1159,3 +1159,19 @@ export async function getCustomNumberAudio(number: string, language: string): Pr
     await db.close();
   }
 }
+
+export async function checkTemplateAudioExists(category: string): Promise<boolean> {
+  const db = await getDb();
+  try {
+    const result = await db.get(
+      'SELECT COUNT(*) as count FROM announcement_templates WHERE category = ? AND template_audio_parts IS NOT NULL',
+      category
+    );
+    return (result?.count || 0) > 0;
+  } catch (error) {
+    console.error('Error checking template audio existence:', error);
+    return false;
+  } finally {
+    await db.close();
+  }
+}

@@ -55,12 +55,12 @@ export default function TemplateAudioPage({ onViewChange }: { onViewChange: (vie
   const AudioPlayer = ({ src, label }: { src: string | null; label: string }) => {
     if (!src) return null;
     return (
-        <div className="flex flex-col items-center gap-1 p-2 border rounded-md bg-muted/50">
+        <div className="flex flex-col items-center gap-1 p-2 border rounded-md bg-muted/50 min-w-[200px]">
              <audio controls className="h-8 w-full" key={src}>
                 <source src={src} type="audio/wav" />
                 Your browser does not support the audio element.
             </audio>
-            <p className="text-xs text-muted-foreground truncate" title={label}>{label}</p>
+            <p className="text-xs text-muted-foreground text-center w-full break-words" title={label}>{label}</p>
         </div>
     );
   };
@@ -131,12 +131,24 @@ export default function TemplateAudioPage({ onViewChange }: { onViewChange: (vie
                                         </div>
                                         <div>
                                             <h4 className="font-semibold mb-2">Audio Parts:</h4>
-                                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
-                                            {template.template_audio_parts.map((part, index) => {
-                                                if (!part) return null;
-                                                const textPart = template.template_text.split(/({[a-zA-Z0-9_]+})/g).filter(p => !p.startsWith('{'))[index] || `Part ${index + 1}`;
-                                                return <AudioPlayer key={part} src={part} label={textPart} />;
-                                            })}
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                                            {(() => {
+                                                const parts = template.template_text.split(/({[a-zA-Z0-9_]+})/g);
+                                                const audioParts = template.template_audio_parts;
+                                                
+                                                return parts.map((part, index) => {
+                                                    if (part.match(/({[a-zA-Z0-9_]+})/g)) {
+                                                        // It's a placeholder, no audio
+                                                        return null;
+                                                    } else if (part.trim().length > 0) {
+                                                        // It's a static text part with audio
+                                                        const audioPart = audioParts[index];
+                                                        if (!audioPart) return null;
+                                                        return <AudioPlayer key={audioPart} src={audioPart} label={part.trim()} />;
+                                                    }
+                                                    return null;
+                                                }).filter(Boolean);
+                                            })()}
                                             </div>
                                         </div>
                                     </div>

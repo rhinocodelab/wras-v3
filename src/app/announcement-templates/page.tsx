@@ -40,7 +40,7 @@ import {
 } from '@/components/ui/tooltip';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, Loader2, ClipboardList, Volume2 } from 'lucide-react';
-import { getAnnouncementTemplates, saveAnnouncementTemplate, Template, clearAllAnnouncementTemplates, generateAndSaveTemplateAudio } from '@/app/actions';
+import { getAnnouncementTemplates, saveAnnouncementTemplate, Template, clearAllAnnouncementTemplates, generateAndSaveTemplateAudio, checkTemplateAudioExists } from '@/app/actions';
 
 const ANNOUNCEMENT_CATEGORIES = ['Arriving', 'Delay', 'Cancelled', 'Platform_Change'];
 const LANGUAGES = ['English', 'हिंदी', 'मराठी', 'ગુજરાતી'];
@@ -66,6 +66,8 @@ export default function AnnouncementTemplatesPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<Template | null>(null);
   const [generatingAudioCategory, setGeneratingAudioCategory] = useState<string | null>(null);
+  const [showRegenerateDialog, setShowRegenerateDialog] = useState(false);
+  const [pendingAudioCategory, setPendingAudioCategory] = useState<string | null>(null);
   const { toast } = useToast();
 
   const fetchTemplates = async () => {
@@ -238,7 +240,37 @@ export default function AnnouncementTemplatesPage() {
   };
 
   const handleGenerateAudioForCategory = async (category: string) => {
+    // Prevent multiple clicks
+    if (generatingAudioCategory === category) {
+      return;
+    }
+
+    try {
+      // Check if audio already exists
+      const audioExists = await checkTemplateAudioExists(category);
+      
+      if (audioExists) {
+        // Show confirmation dialog for regeneration
+        setPendingAudioCategory(category);
+        setShowRegenerateDialog(true);
+        return;
+      }
+      
+      // If no audio exists, proceed with generation
+      await generateAudioForCategory(category);
+      
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: error.message || 'Failed to check audio status.',
+      });
+    }
+  }
+
+  const generateAudioForCategory = async (category: string) => {
     setGeneratingAudioCategory(category);
+    
     try {
       let successCount = 0;
       for (const lang of LANGUAGES) {
@@ -277,6 +309,16 @@ export default function AnnouncementTemplatesPage() {
     } finally {
         setGeneratingAudioCategory(null);
     }
+  }
+
+  const handleRegenerateAudio = async () => {
+    if (!pendingAudioCategory) return;
+    
+    setShowRegenerateDialog(false);
+    setPendingAudioCategory(null);
+    
+    // Proceed with regeneration
+    await generateAudioForCategory(pendingAudioCategory);
   }
   
   return (
@@ -424,7 +466,7 @@ export default function AnnouncementTemplatesPage() {
                                                 </Button>
                                             </TooltipTrigger>
                                             <TooltipContent>
-                                                <p>Generate audio for this category</p>
+                                                <p>Generate or regenerate audio for this category</p>
                                             </TooltipContent>
                                         </Tooltip>
                                     </TooltipProvider>
@@ -473,6 +515,30 @@ export default function AnnouncementTemplatesPage() {
                 </div>
             </DialogContent>
         </Dialog>
+
+        {/* Regenerate Audio Confirmation Dialog */}
+        <AlertDialog open={showRegenerateDialog} onOpenChange={setShowRegenerateDialog}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>Audio Already Exists</AlertDialogTitle>
+                    <AlertDialogDescription>
+                        Audio for the "{pendingAudioCategory?.replace('_', ' ')}" category has already been generated. 
+                        Do you want to regenerate it? This will replace the existing audio files.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel onClick={() => {
+                        setShowRegenerateDialog(false);
+                        setPendingAudioCategory(null);
+                    }}>
+                        Cancel
+                    </AlertDialogCancel>
+                    <AlertDialogAction onClick={handleRegenerateAudio}>
+                        Regenerate
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
     </div>
   );
 }

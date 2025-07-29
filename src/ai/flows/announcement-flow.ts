@@ -208,7 +208,7 @@ const generateAnnouncementFlow = ai.defineFlow(
         let finalAudioPath: string | null = null;
         if(audioData && template.audio_parts) {
             const placeholderRegex = /({[a-zA-Z0-9_]+})/g;
-            const textParts = template.text.split(placeholderRegex).filter((p: string) => p.length > 0);
+            const textParts = template.text.split(placeholderRegex).filter(p => p.length > 0);
             
             const audioSnippets: (string | null)[] = [];
             let staticAudioIndex = 0;
@@ -289,16 +289,17 @@ const generateTemplateAudioFlow = ai.defineFlow({
     await fsPromises.mkdir(audioDir, { recursive: true });
 
     let staticPartIndex = 0;
-    for (const part of parts) {
+    for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
         if (placeholderRegex.test(part)) {
             // It's a placeholder like {train_name}, push null and continue
             audioFilePaths.push(null);
         } else if (part.trim().length > 0) {
             // It's a static text part
-            const cleanText = part.replace(/[.,]/g, ' ').trim(); 
+            const cleanText = part.trim(); 
             
             if (cleanText.length === 0) {
-                 continue;
+                continue;
             }
             
             const audioContent = await generateSpeech(cleanText, languageCode);
@@ -310,6 +311,9 @@ const generateTemplateAudioFlow = ai.defineFlow({
                 audioFilePaths.push(null);
             }
             staticPartIndex++;
+        } else {
+            // Empty part, push null
+            audioFilePaths.push(null);
         }
     }
     
