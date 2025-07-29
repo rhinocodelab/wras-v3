@@ -1141,3 +1141,21 @@ export async function clearAllCustomAudio(): Promise<{ message: string }> {
     await db.close();
   }
 }
+
+export async function getCustomNumberAudio(number: string, language: string): Promise<CustomAudioFile | null> {
+  const db = await getDb();
+  try {
+    const result = await db.get(
+      'SELECT * FROM custom_audio_files WHERE english_text = ? AND language_code = ? AND description LIKE ? ORDER BY created_at DESC LIMIT 1',
+      number,
+      language,
+      'Numbers 0-9%'
+    );
+    return result as CustomAudioFile || null;
+  } catch (error) {
+    console.error('Error fetching custom number audio:', error);
+    return null;
+  } finally {
+    await db.close();
+  }
+}

@@ -3,7 +3,7 @@
 
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
-import { getDb } from '@/app/actions';
+import { getDb, getCustomNumberAudio } from '@/app/actions';
 import { generateSpeech } from '@/ai/flows/tts-flow';
 import * as fsPromises from 'fs/promises';
 import * as fs from 'fs';
@@ -69,6 +69,60 @@ const platformNumberWords: { [key: string]: { [lang: string]: string } } = {
 };
 
 async function generatePlatformAudio(platform: string, lang: string): Promise<string | null> {
+    // Try to get custom audio for each digit in the platform number
+    const digits = platform.split('');
+    const customAudioFiles: string[] = [];
+    
+    for (const digit of digits) {
+        try {
+            // Try to get custom audio for this digit
+            const customAudio = await getCustomNumberAudio(digit, lang);
+            if (customAudio) {
+                // Use the custom audio file
+                const customFilePath = path.join(process.cwd(), 'public', customAudio.audio_file_path);
+                if (await fsPromises.access(customFilePath).then(() => true).catch(() => false)) {
+                    customAudioFiles.push(customFilePath);
+                    continue; // Skip TTS generation for this digit
+                }
+            }
+        } catch (error) {
+            console.warn(`Failed to get custom audio for digit ${digit} in language ${lang}:`, error);
+        }
+        
+        // Fallback to TTS generation for this digit
+        const digitWord = platformNumberWords[lang]?.[digit] || digit;
+        const audioContent = await generateSpeech(digitWord, lang);
+        if (audioContent) {
+            const audioDir = path.join(process.cwd(), 'public', 'audio', '_temp');
+            await fsPromises.mkdir(audioDir, { recursive: true });
+            const filePath = path.join(audioDir, `platform_digit_${digit}_${lang}.wav`);
+            await fsPromises.writeFile(filePath, audioContent);
+            customAudioFiles.push(filePath);
+        }
+    }
+    
+    // If we have custom audio files, concatenate them
+    if (customAudioFiles.length > 0) {
+        const audioDir = path.join(process.cwd(), 'public', 'audio', '_temp');
+        await fsPromises.mkdir(audioDir, { recursive: true });
+        const outputPath = path.join(audioDir, `platform_${platform}_${lang}.wav`);
+        
+        // Simple concatenation for now
+        if (customAudioFiles.length === 1) {
+            // If only one file, just copy it
+            await fsPromises.copyFile(customAudioFiles[0], outputPath);
+        } else {
+            // Concatenate multiple files
+            const concatenatedPath = await concatenateAudio(customAudioFiles, `platform_${platform}_${lang}.wav`);
+            if (concatenatedPath) {
+                return concatenatedPath;
+            }
+        }
+        
+        return outputPath;
+    }
+    
+    // Fallback to original TTS approach if no custom audio found
     const platformWord = platform.split('').map(digit => platformNumberWords[lang]?.[digit] || digit).join(' ');
     const audioContent = await generateSpeech(platformWord, lang);
     if (!audioContent) return null;
@@ -154,7 +208,7 @@ const generateAnnouncementFlow = ai.defineFlow(
         let finalAudioPath: string | null = null;
         if(audioData && template.audio_parts) {
             const placeholderRegex = /({[a-zA-Z0-9_]+})/g;
-            const textParts = template.text.split(placeholderRegex).filter(p => p.length > 0);
+            const textParts = template.text.split(placeholderRegex).filter((p: string) => p.length > 0);
             
             const audioSnippets: (string | null)[] = [];
             let staticAudioIndex = 0;

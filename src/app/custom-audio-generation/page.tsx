@@ -307,7 +307,7 @@ export default function CustomAudioGenerationPage() {
       <div>
         <h1 className="text-lg font-semibold md:text-2xl">Custom Audio Generation</h1>
         <p className="text-muted-foreground">
-          Generate and preview custom audio files from English text in all 4 languages using Google Cloud Text-to-Speech with Chirp3 HD voices.
+          Generate and preview custom audio files from English text in all 4 languages.
         </p>
       </div>
 
@@ -317,7 +317,7 @@ export default function CustomAudioGenerationPage() {
           <CardHeader>
             <CardTitle>Generate Audio</CardTitle>
             <CardDescription>
-              Enter English text to generate high-quality audio files in all 4 languages using Google Cloud TTS Chirp3 HD voices.
+              Enter English text to generate high-quality audio files in all 4 languages.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
