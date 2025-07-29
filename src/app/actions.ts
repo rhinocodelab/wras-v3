@@ -102,6 +102,21 @@ export async function getDb() {
   }
   // --- End Migration ---
 
+  // Custom Audio Files Table
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS custom_audio_files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      english_text TEXT NOT NULL,
+      translated_text TEXT NOT NULL,
+      language_code TEXT NOT NULL,
+      description TEXT,
+      audio_file_path TEXT NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      file_size INTEGER,
+      duration REAL
+    )
+  `);
+
   return db;
 }
 
@@ -906,4 +921,223 @@ export async function transcribeAndTranslateAudio(formData: FormData) {
         transcribedText: transcription,
         translatedText: translatedText,
     };
+}
+
+// --- Custom Audio Generation Types and Functions ---
+
+export type CustomAudioFile = {
+  id?: number;
+  english_text: string;
+  translated_text: string;
+  language_code: string;
+  description?: string;
+  audio_file_path: string;
+  created_at?: string;
+  file_size?: number;
+  duration?: number;
+};
+
+export async function generateCustomAudioTemporary(
+  englishText: string, 
+  languages: string[], 
+  description?: string
+): Promise<CustomAudioFile[]> {
+  const db = await getDb();
+  const results: CustomAudioFile[] = [];
+  
+  try {
+    // Create temporary audio directory
+    const audioDir = path.join(process.cwd(), 'public', 'audio', '_temp_custom');
+    await fs.mkdir(audioDir, { recursive: true });
+
+    // Generate timestamp for file naming
+    const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 19);
+    const sanitizedDescription = description ? description.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_') : 'custom';
+    
+    for (let i = 0; i < languages.length; i++) {
+      const lang = languages[i];
+      try {
+        // 1. Translate English text to target language
+        const translatedText = await translateFlowText(englishText, lang, 'en');
+        
+        // 2. Generate audio from translated text
+        const audioContent = await generateSpeech(translatedText, lang);
+        
+        if (!audioContent) {
+          console.warn(`Failed to generate audio for language: ${lang}`);
+          continue;
+        }
+        
+        // 3. Save audio file to temporary directory
+        const fileName = `${timestamp}_${sanitizedDescription}_${lang}.wav`;
+        const filePath = path.join(audioDir, fileName);
+        await fs.writeFile(filePath, audioContent);
+        
+        // 4. Get file stats
+        const stats = await fs.stat(filePath);
+        
+        // 5. Create temporary record (not saved to database yet)
+        const tempRecord: CustomAudioFile = {
+          english_text: englishText,
+          translated_text: translatedText,
+          language_code: lang,
+          description: description || '',
+          audio_file_path: `/audio/_temp_custom/${fileName}`,
+          file_size: stats.size,
+          created_at: new Date().toISOString()
+        };
+        
+        results.push(tempRecord);
+        
+        // Add delay to avoid rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+      } catch (error) {
+        console.error(`Error generating custom audio for language ${lang}:`, error);
+        // Continue with other languages even if one fails
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error in generateCustomAudio:', error);
+    throw error;
+  } finally {
+    await db.close();
+  }
+  
+  return results;
+}
+
+export async function cleanupTemporaryCustomAudio(): Promise<void> {
+  const tempDir = path.join(process.cwd(), 'public', 'audio', '_temp_custom');
+  try {
+    await fs.rm(tempDir, { recursive: true, force: true });
+  } catch (error) {
+    console.warn('Could not cleanup temporary custom audio directory:', error);
+  }
+}
+
+export async function saveCustomAudioPermanently(
+  temporaryFiles: CustomAudioFile[]
+): Promise<CustomAudioFile[]> {
+  const db = await getDb();
+  const results: CustomAudioFile[] = [];
+  
+  try {
+    // Create permanent custom audio directory
+    const permanentDir = path.join(process.cwd(), 'public', 'audio', 'custom');
+    await fs.mkdir(permanentDir, { recursive: true });
+
+    for (const tempFile of temporaryFiles) {
+      try {
+        // 1. Move file from temporary to permanent location
+        const tempFilePath = path.join(process.cwd(), 'public', tempFile.audio_file_path);
+        const fileName = tempFile.audio_file_path.split('/').pop() || 'audio.wav';
+        const permanentFilePath = path.join(permanentDir, fileName);
+        
+        // Move the file
+        await fs.rename(tempFilePath, permanentFilePath);
+        
+        // 2. Update the file path
+        const newFilePath = `/audio/custom/${fileName}`;
+        
+        // 3. Save to database
+        const result = await db.run(
+          'INSERT INTO custom_audio_files (english_text, translated_text, language_code, description, audio_file_path, file_size) VALUES (?, ?, ?, ?, ?, ?)',
+          tempFile.english_text,
+          tempFile.translated_text,
+          tempFile.language_code,
+          tempFile.description,
+          newFilePath,
+          tempFile.file_size
+        );
+        
+        // 4. Get the inserted record
+        const insertedRecord = await db.get(
+          'SELECT * FROM custom_audio_files WHERE id = ?',
+          result.lastID
+        );
+        
+        results.push(insertedRecord as CustomAudioFile);
+        
+      } catch (error) {
+        console.error(`Error saving custom audio file permanently:`, error);
+        // Continue with other files even if one fails
+      }
+    }
+    
+  } catch (error) {
+    console.error('Error in saveCustomAudioPermanently:', error);
+    throw error;
+  } finally {
+    await db.close();
+  }
+  
+  return results;
+}
+
+export async function getCustomAudioFiles(): Promise<CustomAudioFile[]> {
+  const db = await getDb();
+  try {
+    const files = await db.all(
+      'SELECT * FROM custom_audio_files ORDER BY created_at DESC'
+    );
+    return files as CustomAudioFile[];
+  } catch (error) {
+    console.error('Failed to fetch custom audio files:', error);
+    return [];
+  } finally {
+    await db.close();
+  }
+}
+
+export async function deleteCustomAudioFile(id: number): Promise<void> {
+  const db = await getDb();
+  try {
+    // Get the file path before deleting
+    const file = await db.get('SELECT audio_file_path FROM custom_audio_files WHERE id = ?', id);
+    
+    if (file) {
+      // Delete the physical file
+      const filePath = path.join(process.cwd(), 'public', file.audio_file_path);
+      await fs.unlink(filePath).catch(() => {
+        console.warn(`Could not delete file: ${filePath}`);
+      });
+    }
+    
+    // Delete from database
+    await db.run('DELETE FROM custom_audio_files WHERE id = ?', id);
+    
+  } catch (error) {
+    console.error('Failed to delete custom audio file:', error);
+    throw error;
+  } finally {
+    await db.close();
+  }
+}
+
+export async function clearAllCustomAudio(): Promise<{ message: string }> {
+  const db = await getDb();
+  try {
+    // Get all file paths
+    const files = await db.all('SELECT audio_file_path FROM custom_audio_files');
+    
+    // Delete all physical files
+    for (const file of files) {
+      const filePath = path.join(process.cwd(), 'public', file.audio_file_path);
+      await fs.unlink(filePath).catch(() => {
+        console.warn(`Could not delete file: ${filePath}`);
+      });
+    }
+    
+    // Clear database
+    await db.run('DELETE FROM custom_audio_files');
+    
+    return { message: 'All custom audio files have been deleted.' };
+  } catch (error) {
+    console.error('Failed to clear custom audio files:', error);
+    throw error;
+  } finally {
+    await db.close();
+  }
 }

@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { clearAllTranslations, getTrainRoutes, clearAllAudio, getAnnouncementTemplates, clearAllTemplateAudio } from '@/app/actions';
+import { clearAllTranslations, getTrainRoutes, clearAllAudio, getAnnouncementTemplates, clearAllTemplateAudio, getCustomAudioFiles, clearAllCustomAudio } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
 
@@ -23,13 +23,16 @@ export default function AiDatabasePage({ onViewChange }: { onViewChange: (view: 
   const [isClearing, setIsClearing] = useState(false);
   const [isClearingAudio, setIsClearingAudio] = useState(false);
   const [isClearingTemplateAudio, setIsClearingTemplateAudio] = useState(false);
+  const [isClearingCustomAudio, setIsClearingCustomAudio] = useState(false);
   const [routesExist, setRoutesExist] = useState(false);
   const [templatesExist, setTemplatesExist] = useState(false);
+  const [customAudioExist, setCustomAudioExist] = useState(false);
   const { toast } = useToast();
 
   const handleViewTranslations = () => onViewChange('translations');
   const handleViewAudio = () => onViewChange('audio');
   const handleViewTemplateAudio = () => onViewChange('template-audio');
+  const handleViewCustomAudio = () => onViewChange('custom-audio');
   
   useEffect(() => {
     getTrainRoutes().then(routes => {
@@ -37,7 +40,10 @@ export default function AiDatabasePage({ onViewChange }: { onViewChange: (view: 
     });
     getAnnouncementTemplates().then(templates => {
         setTemplatesExist(templates.length > 0)
-    })
+    });
+    getCustomAudioFiles().then(files => {
+        setCustomAudioExist(files.length > 0)
+    });
   }, [])
 
   const handleClearTranslations = async () => {
@@ -97,6 +103,26 @@ export default function AiDatabasePage({ onViewChange }: { onViewChange: (view: 
       console.error('Failed to clear template audio:', error);
     } finally {
         setIsClearingTemplateAudio(false);
+    }
+  }
+
+  const handleClearCustomAudio = async () => {
+    setIsClearingCustomAudio(true);
+    try {
+      const result = await clearAllCustomAudio();
+      toast({
+        title: 'Success',
+        description: result.message,
+      });
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Failed to clear custom audio data.',
+      });
+      console.error('Failed to clear custom audio:', error);
+    } finally {
+        setIsClearingCustomAudio(false);
     }
   }
 
@@ -214,6 +240,42 @@ export default function AiDatabasePage({ onViewChange }: { onViewChange: (view: 
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
                   <AlertDialogAction onClick={handleClearTemplateAudio}>
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-xl">AI Custom Audio</CardTitle>
+            <CardDescription>
+              View and manage all saved custom audio files generated using Google Cloud TTS Chirp3 HD voices.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="flex flex-wrap gap-2">
+            <Button onClick={handleViewCustomAudio} disabled={!customAudioExist} size="sm">
+              View Audio Files
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" disabled={isClearingCustomAudio || !customAudioExist} size="sm">
+                    {isClearingCustomAudio && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    {isClearingCustomAudio ? 'Clearing...' : 'Clear All'}
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    This action cannot be undone. This will permanently delete all
+                    custom audio files and data from the database.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction onClick={handleClearCustomAudio}>
                     Continue
                   </AlertDialogAction>
                 </AlertDialogFooter>

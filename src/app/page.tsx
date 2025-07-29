@@ -24,6 +24,8 @@ import AiDatabasePage from '@/app/ai-database/page';
 import TranslationsPage from '@/app/ai-database/translations/page';
 import AudioPage from '@/app/ai-database/audio/page';
 import TemplateAudioPage from '@/app/ai-database/template-audio/page';
+import CustomAudioPage from '@/app/ai-database/custom-audio/page';
+import CustomAudioGenerationPage from '@/app/custom-audio-generation/page';
 import IslDatasetPage from '@/app/isl-dataset/page';
 import AnnouncementTemplatesPage from '@/app/announcement-templates/page';
 import SpeechToIslPage from '@/app/speech-to-isl/page';
@@ -49,6 +51,10 @@ export default function HomePage() {
         return <AudioPage onViewChange={setActiveView} />;
       case 'template-audio':
         return <TemplateAudioPage onViewChange={setActiveView} />;
+      case 'custom-audio':
+        return <CustomAudioPage onViewChange={setActiveView} />;
+      case 'custom-audio-generation':
+        return <CustomAudioGenerationPage />;
       case 'isl-dataset':
         return <IslDatasetPage />;
       case 'announcement-templates':
@@ -66,7 +72,7 @@ export default function HomePage() {
 
   const getLinkClassName = (view: string) => {
     const baseClass = `flex cursor-pointer items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary`;
-    const isActive = activeView === view || (view === 'ai-database' && (activeView === 'translations' || activeView === 'audio' || activeView === 'template-audio'));
+    const isActive = activeView === view || (view === 'ai-database' && (activeView === 'translations' || activeView === 'audio' || activeView === 'template-audio' || activeView === 'custom-audio'));
     return `${baseClass} ${
       isActive
         ? 'bg-muted text-primary'
@@ -76,7 +82,7 @@ export default function HomePage() {
 
   const getMobileLinkClassName = (view: string) => {
     const baseClass = `flex cursor-pointer items-center gap-4 px-2.5 transition-all hover:text-foreground`;
-    const isActive = activeView === view || (view === 'ai-database' && (activeView === 'translations' || activeView === 'audio' || activeView === 'template-audio'));
+    const isActive = activeView === view || (view === 'ai-database' && (activeView === 'translations' || activeView === 'audio' || activeView === 'template-audio' || activeView === 'custom-audio'));
     return `${baseClass} ${
       isActive
         ? 'text-foreground'
@@ -95,62 +101,95 @@ export default function HomePage() {
               </div>
           </div>
           <nav className="flex-1 overflow-auto py-4">
-            <div className="grid items-start px-4 text-sm font-medium">
-              <div
-                onClick={() => setActiveView('dashboard')}
-                className={getLinkClassName('dashboard')}
-              >
-                <Home className="h-4 w-4" />
-                Dashboard
+            <div className="grid items-start px-4 text-sm font-medium space-y-4">
+              {/* Core Management Section */}
+              <div className="space-y-2">
+                <div className="px-2 py-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Core Management
+                  </h3>
+                </div>
+                <div
+                  onClick={() => setActiveView('dashboard')}
+                  className={getLinkClassName('dashboard')}
+                >
+                  <Home className="h-4 w-4" />
+                  Dashboard
+                </div>
+                <div
+                  onClick={() => setActiveView('route-management')}
+                  className={getLinkClassName('route-management')}
+                >
+                  <GitFork className="h-4 w-4" />
+                  Route Management
+                </div>
               </div>
-              <div
-                onClick={() => setActiveView('route-management')}
-                className={getLinkClassName('route-management')}
-              >
-                <GitFork className="h-4 w-4" />
-                Route Management
+
+              {/* AI & Content Generation Section */}
+              <div className="space-y-2">
+                <div className="px-2 py-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    AI & Content Generation
+                  </h3>
+                </div>
+                <div
+                  onClick={() => setActiveView('custom-audio-generation')}
+                  className={getLinkClassName('custom-audio-generation')}
+                >
+                  <FileAudio className="h-4 w-4" />
+                  Custom Audio Generation
+                </div>
+                <div
+                  onClick={() => setActiveView('announcement-templates')}
+                  className={getLinkClassName('announcement-templates')}
+                >
+                  <ClipboardList className="h-4 w-4" />
+                  Announcement Templates
+                </div>
+                <div
+                  onClick={() => setActiveView('ai-database')}
+                  className={getLinkClassName('ai-database')}
+                >
+                  <Database className="h-4 w-4" />
+                  AI Generated Assets
+                </div>
               </div>
-              <div
-                onClick={() => setActiveView('ai-database')}
-                className={getLinkClassName('ai-database')}
-              >
-                <Database className="h-4 w-4" />
-                AI Generated Assets
-              </div>
-              <div
-                onClick={() => setActiveView('isl-dataset')}
-                className={getLinkClassName('isl-dataset')}
-              >
-                <FolderKanban className="h-4 w-4" />
-                ISL Dataset
-              </div>
-              <div
-                onClick={() => setActiveView('announcement-templates')}
-                className={getLinkClassName('announcement-templates')}
-              >
-                <ClipboardList className="h-4 w-4" />
-                Announcement Templates
-              </div>
-              <div
-                onClick={() => setActiveView('speech-to-isl')}
-                className={getLinkClassName('speech-to-isl')}
-              >
-                <Speech className="h-4 w-4" />
-                Speech to ISL
-              </div>
-              <div
-                onClick={() => setActiveView('text-to-isl')}
-                className={getLinkClassName('text-to-isl')}
-              >
-                <Text className="h-4 w-4" />
-                Text to ISL
-              </div>
-              <div
-                onClick={() => setActiveView('audio-file-to-isl')}
-                className={getLinkClassName('audio-file-to-isl')}
-              >
-                <FileAudio className="h-4 w-4" />
-                Audio File to ISL
+
+              {/* Sign Language (ISL) Section */}
+              <div className="space-y-2">
+                <div className="px-2 py-1">
+                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                    Sign Language (ISL)
+                  </h3>
+                </div>
+                <div
+                  onClick={() => setActiveView('isl-dataset')}
+                  className={getLinkClassName('isl-dataset')}
+                >
+                  <FolderKanban className="h-4 w-4" />
+                  ISL Dataset
+                </div>
+                <div
+                  onClick={() => setActiveView('speech-to-isl')}
+                  className={getLinkClassName('speech-to-isl')}
+                >
+                  <Speech className="h-4 w-4" />
+                  Speech to ISL
+                </div>
+                <div
+                  onClick={() => setActiveView('text-to-isl')}
+                  className={getLinkClassName('text-to-isl')}
+                >
+                  <Text className="h-4 w-4" />
+                  Text to ISL
+                </div>
+                <div
+                  onClick={() => setActiveView('audio-file-to-isl')}
+                  className={getLinkClassName('audio-file-to-isl')}
+                >
+                  <FileAudio className="h-4 w-4" />
+                  Audio File to ISL
+                </div>
               </div>
             </div>
           </nav>
@@ -174,61 +213,95 @@ export default function HomePage() {
                     <Home className="h-5 w-5 transition-all group-hover:scale-110" />
                     <span className="sr-only">Railway Dashboard</span>
                   </Link>
-                  <div
-                    onClick={() => setActiveView('dashboard')}
-                    className={getMobileLinkClassName('dashboard')}
-                  >
-                    <Home className="h-5 w-5" />
-                    Dashboard
+                  
+                  {/* Core Management Section */}
+                  <div className="space-y-2">
+                    <div className="px-2 py-1">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Core Management
+                      </h3>
+                    </div>
+                    <div
+                      onClick={() => setActiveView('dashboard')}
+                      className={getMobileLinkClassName('dashboard')}
+                    >
+                      <Home className="h-5 w-5" />
+                      Dashboard
+                    </div>
+                    <div
+                      onClick={() => setActiveView('route-management')}
+                      className={getMobileLinkClassName('route-management')}
+                    >
+                      <GitFork className="h-5 w-5" />
+                      Route Management
+                    </div>
                   </div>
-                  <div
-                    onClick={() => setActiveView('route-management')}
-                    className={getMobileLinkClassName('route-management')}
-                  >
-                    <GitFork className="h-5 w-5" />
-                    Route Management
+
+                  {/* AI & Content Generation Section */}
+                  <div className="space-y-2">
+                    <div className="px-2 py-1">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        AI & Content Generation
+                      </h3>
+                    </div>
+                    <div
+                      onClick={() => setActiveView('custom-audio-generation')}
+                      className={getMobileLinkClassName('custom-audio-generation')}
+                    >
+                      <FileAudio className="h-5 w-5" />
+                      Custom Audio Generation
+                    </div>
+                    <div
+                      onClick={() => setActiveView('announcement-templates')}
+                      className={getMobileLinkClassName('announcement-templates')}
+                    >
+                      <ClipboardList className="h-5 w-5" />
+                      Announcement Templates
+                    </div>
+                    <div
+                      onClick={() => setActiveView('ai-database')}
+                      className={getMobileLinkClassName('ai-database')}
+                    >
+                      <Database className="h-5 w-5" />
+                      AI Generated Assets
+                    </div>
                   </div>
-                  <div
-                    onClick={() => setActiveView('ai-database')}
-                    className={getMobileLinkClassName('ai-database')}
-                  >
-                    <Database className="h-5 w-5" />
-                    AI Generated Assets
-                  </div>
-                  <div
-                    onClick={() => setActiveView('isl-dataset')}
-                    className={getMobileLinkClassName('isl-dataset')}
-                  >
-                    <FolderKanban className="h-5 w-5" />
-                    ISL Dataset
-                  </div>
-                  <div
-                    onClick={() => setActiveView('announcement-templates')}
-                    className={getMobileLinkClassName('announcement-templates')}
-                  >
-                    <ClipboardList className="h-5 w-5" />
-                    Announcement Templates
-                  </div>
-                  <div
-                    onClick={() => setActiveView('speech-to-isl')}
-                    className={getMobileLinkClassName('speech-to-isl')}
-                  >
-                    <Speech className="h-5 w-5" />
-                    Speech to ISL
-                  </div>
-                  <div
-                    onClick={() => setActiveView('text-to-isl')}
-                    className={getMobileLinkClassName('text-to-isl')}
-                  >
-                    <Text className="h-5 w-5" />
-                    Text to ISL
-                  </div>
-                  <div
-                    onClick={() => setActiveView('audio-file-to-isl')}
-                    className={getMobileLinkClassName('audio-file-to-isl')}
-                  >
-                    <FileAudio className="h-5 w-5" />
-                    Audio File to ISL
+
+                  {/* Sign Language (ISL) Section */}
+                  <div className="space-y-2">
+                    <div className="px-2 py-1">
+                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                        Sign Language (ISL)
+                      </h3>
+                    </div>
+                    <div
+                      onClick={() => setActiveView('isl-dataset')}
+                      className={getMobileLinkClassName('isl-dataset')}
+                    >
+                      <FolderKanban className="h-5 w-5" />
+                      ISL Dataset
+                    </div>
+                    <div
+                      onClick={() => setActiveView('speech-to-isl')}
+                      className={getMobileLinkClassName('speech-to-isl')}
+                    >
+                      <Speech className="h-5 w-5" />
+                      Speech to ISL
+                    </div>
+                    <div
+                      onClick={() => setActiveView('text-to-isl')}
+                      className={getMobileLinkClassName('text-to-isl')}
+                    >
+                      <Text className="h-5 w-5" />
+                      Text to ISL
+                    </div>
+                    <div
+                      onClick={() => setActiveView('audio-file-to-isl')}
+                      className={getMobileLinkClassName('audio-file-to-isl')}
+                    >
+                      <FileAudio className="h-5 w-5" />
+                      Audio File to ISL
+                    </div>
                   </div>
                 </nav>
               </SheetContent>
