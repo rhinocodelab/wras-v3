@@ -252,28 +252,44 @@ export function Dashboard() {
           <div class="ticker">${tickerText}</div>
         </div>
         <audio id="announcement-audio"></audio>
+        <audio id="intro-audio" preload="auto"></audio>
 
         <script>
           const videoElement = document.getElementById('isl-video');
           const audioPlayer = document.getElementById('announcement-audio');
+          const introAudio = document.getElementById('intro-audio');
           const videoPlaylist = ${videoSources};
           const audioPlaylist = ${audioSources};
+          const introAudioPath = '${baseUrl}/audio/intro_audio/intro.wav';
           let currentAudioIndex = 0;
           let isPlaying = false;
+          let isPlayingIntro = false;
 
-          function playNextAudio() {
+          // Set up intro audio
+          introAudio.src = introAudioPath;
+          introAudio.volume = 1.0;
+
+          function playIntroThenAnnouncement() {
             if (!audioPlayer || audioPlaylist.length === 0) return;
             
             if (currentAudioIndex < audioPlaylist.length) {
-              audioPlayer.src = audioPlaylist[currentAudioIndex];
-              audioPlayer.play().catch(e => console.error("Audio play error:", e));
-              currentAudioIndex++;
+              // Play intro first
+              isPlayingIntro = true;
+              introAudio.play().catch(e => console.error("Intro audio play error:", e));
+              
+              // When intro ends, play the announcement
+              introAudio.onended = () => {
+                isPlayingIntro = false;
+                audioPlayer.src = audioPlaylist[currentAudioIndex];
+                audioPlayer.play().catch(e => console.error("Audio play error:", e));
+                currentAudioIndex++;
+              };
             } else {
               // Reset to start for continuous loop
               currentAudioIndex = 0;
               setTimeout(() => {
                 if (isPlaying) {
-                  playNextAudio();
+                  playIntroThenAnnouncement();
                 }
               }, 1000); // 1 second pause before restarting
             }
@@ -291,11 +307,11 @@ export function Dashboard() {
                     audioPlayer.play().catch(e => console.error("Audio play error:", e));
                     audioPlayer.oncanplay = null; // Prevent re-triggering
                 }
-                playNextAudio();
+                playIntroThenAnnouncement();
              }
           }
 
-          audioPlayer.addEventListener('ended', playNextAudio);
+          audioPlayer.addEventListener('ended', playIntroThenAnnouncement);
           
           // Use a more reliable event to start playback
           window.addEventListener('load', startPlayback, { once: true });
