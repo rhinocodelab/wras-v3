@@ -4,18 +4,14 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Languages, MessageSquare, Video, Text, Film, Rocket } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { translateInputText, getIslVideoPlaylist } from '@/app/actions';
 
-const LANGUAGE_OPTIONS: { [key: string]: string } = {
-  'en': 'English',
-  'hi': 'हिंदी',
-  'mr': 'मराठी',
-  'gu': 'ગુજરાતી',
-};
+// Source language is fixed to English only
+const SOURCE_LANGUAGE = 'en';
 
 const IslVideoPlayer = ({ playlist, title, onPublish }: { playlist: string[]; title: string; onPublish?: () => void }) => {
     const videoRef = useRef<HTMLVideoElement>(null);
@@ -47,7 +43,7 @@ const IslVideoPlayer = ({ playlist, title, onPublish }: { playlist: string[]; ti
             <CardContent className="flex-grow flex flex-col p-2 pt-0">
                 <video
                     ref={videoRef}
-                    className="w-full h-64 rounded-t-md bg-black object-cover"
+                    className="w-full h-80 rounded-t-md bg-black object-cover"
                     controls={false}
                     autoPlay
                     muted
@@ -86,53 +82,21 @@ const IslVideoPlayer = ({ playlist, title, onPublish }: { playlist: string[]; ti
 
 
 export default function TextToIslPage() {
-    const [selectedLang, setSelectedLang] = useState('en');
     const [inputText, setInputText] = useState('');
-    const [translatedText, setTranslatedText] = useState('');
     const [islPlaylist, setIslPlaylist] = useState<string[]>([]);
-    const [isTranslating, setIsTranslating] = useState(false);
     const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
 
     const { toast } = useToast();
 
-     const handleTranslateClick = useCallback(async () => {
-        if (!inputText.trim()) return;
-
-        setIsTranslating(true);
-        setTranslatedText('');
-        setIslPlaylist([]); 
-        try {
-            if (selectedLang === 'en') {
-                // Add spaces between digits for English text
-                const processedText = inputText.replace(/(\d)/g, ' $1 ');
-                setTranslatedText(processedText);
-            } else {
-                const formData = new FormData();
-                formData.append('text', inputText);
-                formData.append('lang', selectedLang);
-                const result = await translateInputText(formData);
-                // Add spaces between digits for translated text
-                const processedText = result.translatedText.replace(/(\d)/g, ' $1 ');
-                setTranslatedText(processedText);
-            }
-        } catch (error) {
-            console.error("Translation failed:", error);
-            toast({
-                variant: "destructive",
-                title: "Translation Error",
-                description: "Failed to translate the text."
-            });
-        } finally {
-            setIsTranslating(false);
-        }
-    }, [inputText, selectedLang, toast]);
-
     const handleGenerateVideoClick = useCallback(async () => {
-        if (!translatedText.trim()) return;
+        if (!inputText.trim()) return;
         
         setIsGeneratingVideo(true);
+        setIslPlaylist([]);
         try {
-            const playlist = await getIslVideoPlaylist(translatedText);
+            // Process the input text (add spaces between digits for better ISL recognition)
+            const processedText = inputText.replace(/(\d)/g, ' $1 ');
+            const playlist = await getIslVideoPlaylist(processedText);
             setIslPlaylist(playlist);
         } catch (error) {
              console.error("ISL generation failed:", error);
@@ -144,23 +108,17 @@ export default function TextToIslPage() {
         } finally {
             setIsGeneratingVideo(false);
         }
-    }, [translatedText, toast]);
+    }, [inputText, toast]);
     
     const handleClearInput = () => {
         setInputText('');
-        setTranslatedText('');
-        setIslPlaylist([]);
-    }
-
-    const handleClearTranslation = () => {
-        setTranslatedText('');
         setIslPlaylist([]);
     }
     
     const handlePublish = () => {
-        if (!translatedText && !inputText) return;
+        if (!inputText) return;
 
-        const tickerText = [inputText, translatedText].filter(Boolean).join(' &nbsp; | &nbsp; ');
+        const tickerText = inputText;
         
         // Convert relative video paths to absolute URLs
         const baseUrl = window.location.origin;
@@ -225,91 +183,46 @@ export default function TextToIslPage() {
                     Text to ISL Converter
                 </h1>
                 <p className="text-muted-foreground">
-                    Enter text, translate to English, and generate the ISL video.
+                    Enter English text and generate the ISL video.
                 </p>
             </div>
 
-             <Card className="mt-6">
-                <CardContent className="p-4 flex flex-col sm:flex-row items-center gap-4">
-                     <div className="w-full sm:w-auto">
-                        <label className="text-sm font-medium">Source Language</label>
-                        <Select value={selectedLang} onValueChange={setSelectedLang}>
-                            <SelectTrigger className="w-full sm:w-[180px]">
-                                <SelectValue placeholder="Select a language" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {Object.entries(LANGUAGE_OPTIONS).map(([code, name]) => (
-                                    <SelectItem key={code} value={code}>{name}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </CardContent>
-            </Card>
 
-            <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
-                <div className="md:col-span-2 grid grid-rows-2 gap-6">
-                    <Card className="flex flex-col row-span-1">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                            <div className="space-y-1.5">
-                                <CardTitle className="flex items-center gap-2">
-                                <MessageSquare className="h-5 w-5 text-primary" />
-                                Input Text
-                                </CardTitle>
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={handleClearInput} disabled={!inputText}>
-                                Clear
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6 flex-grow">
+                <Card className="flex flex-col">
+                    <CardHeader className="flex flex-row items-center justify-between">
+                        <div className="space-y-1.5">
+                            <CardTitle className="flex items-center gap-2">
+                            <MessageSquare className="h-5 w-5 text-primary" />
+                            Input Text
+                            </CardTitle>
+                            <CardDescription>
+                                Enter English text to generate ISL video.
+                            </CardDescription>
+                        </div>
+                        <Button variant="ghost" size="sm" onClick={handleClearInput} disabled={!inputText}>
+                            Clear
+                        </Button>
+                    </CardHeader>
+                    <CardContent className="flex-grow flex flex-col gap-4">
+                        <Textarea
+                            value={inputText}
+                            onChange={(e) => setInputText(e.target.value)}
+                            placeholder="Enter English text here..."
+                            className="h-full resize-none"
+                        />
+                        <div className="flex gap-2">
+                            <Button onClick={handleGenerateVideoClick} disabled={isGeneratingVideo || !inputText}>
+                                {isGeneratingVideo ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Film className="mr-2 h-4 w-4" />}
+                                {isGeneratingVideo ? "Generating..." : "Generate ISL Video"}
                             </Button>
-                        </CardHeader>
-                        <CardContent className="flex-grow">
-                            <Textarea
-                                value={inputText}
-                                onChange={(e) => setInputText(e.target.value)}
-                                placeholder="Enter text to translate..."
-                                className="h-full resize-none"
-                            />
-                        </CardContent>
-                    </Card>
+                        </div>
+                    </CardContent>
+                </Card>
 
-                    <Card className="flex flex-col row-span-1">
-                        <CardHeader className="flex flex-row items-center justify-between">
-                             <div className="space-y-1.5">
-                                <CardTitle className="flex items-center gap-2">
-                                    <Languages className="h-5 w-5 text-primary" />
-                                    English Translation
-                                </CardTitle>
-                                 <CardDescription>
-                                    This text will be used to generate the ISL video.
-                                </CardDescription>
-                            </div>
-                             <Button variant="ghost" size="sm" onClick={handleClearTranslation} disabled={!translatedText}>
-                                Clear
-                            </Button>
-                        </CardHeader>
-                        <CardContent className="flex-grow flex flex-col gap-4">
-                            <Textarea
-                                value={translatedText}
-                                readOnly
-                                placeholder="The English translation will appear here..."
-                                className="h-full resize-none"
-                            />
-                            <div className="flex gap-2">
-                                <Button onClick={handleTranslateClick} disabled={isTranslating || !inputText}>
-                                    {isTranslating ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Languages className="mr-2 h-4 w-4"/>}
-                                    {isTranslating ? "Translating..." : "Translate"}
-                                </Button>
-                                 <Button onClick={handleGenerateVideoClick} disabled={isGeneratingVideo || !translatedText}>
-                                    {isGeneratingVideo ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Film className="mr-2 h-4 w-4" />}
-                                    {isGeneratingVideo ? "Generating..." : "Generate ISL Video"}
-                                 </Button>
-                            </div>
-                        </CardContent>
-                    </Card>
-                </div>
-
-
-                <div className="md:col-span-1 h-full min-h-[300px]">
-                     {isTranslating || isGeneratingVideo ? (
+                <div className="h-full min-h-[300px]">
+                     {isGeneratingVideo ? (
                          <div className="flex items-center justify-center h-full rounded-lg bg-muted">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
                          </div>

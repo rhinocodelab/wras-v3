@@ -94,6 +94,7 @@ export default function SpeechToIslPage() {
     const [islPlaylist, setIslPlaylist] = useState<string[]>([]);
     const [isTranslating, setIsTranslating] = useState(false);
     const [isGeneratingVideo, setIsGeneratingVideo] = useState(false);
+    const [micPermission, setMicPermission] = useState<boolean | null>(null);
 
     const { toast } = useToast();
     const recognitionRef = useRef<any>(null);
@@ -103,6 +104,27 @@ export default function SpeechToIslPage() {
     useEffect(() => {
         recordingRef.current = isRecording;
     }, [isRecording]);
+
+    // Check microphone permissions on component mount
+    useEffect(() => {
+        const checkMicPermission = async () => {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop()); // Stop the stream immediately
+                setMicPermission(true);
+            } catch (error) {
+                console.error('Microphone permission denied:', error);
+                setMicPermission(false);
+                toast({
+                    variant: 'destructive',
+                    title: 'Microphone Permission Required',
+                    description: 'Please allow microphone access to use speech recognition.'
+                });
+            }
+        };
+        
+        checkMicPermission();
+    }, [toast]);
 
      const handleTranslateClick = useCallback(async () => {
         const textToTranslate = finalTranscribedText;
@@ -161,69 +183,73 @@ export default function SpeechToIslPage() {
         if (SpeechRecognition) {
             const recognition = new SpeechRecognition();
             recognition.continuous = true;
-            recognition.interimResults = true;
+            recognition.interimResults = false; // Changed to false to avoid real-time updates
             recognition.lang = selectedLang;
+            recognition.maxAlternatives = 1;
 
             recognition.onresult = (event: any) => {
-                let interimTranscript = '';
-                let newFinalTranscript = '';
+                let finalTranscript = '';
                 
                 for (let i = event.resultIndex; i < event.results.length; ++i) {
                     if (event.results[i].isFinal) {
-                         newFinalTranscript += event.results[i][0].transcript.trim() + ' ';
-                    } else {
-                        interimTranscript += event.results[i][0].transcript;
+                        finalTranscript += event.results[i][0].transcript.trim() + ' ';
                     }
                 }
                 
-                if (newFinalTranscript) {
-                    setFinalTranscribedText(prev => prev + newFinalTranscript);
+                if (finalTranscript) {
+                    setFinalTranscribedText(prev => prev + finalTranscript);
+                    setTranscribedText(prev => prev + finalTranscript);
                 }
-                setTranscribedText(finalTranscribedText + newFinalTranscript + interimTranscript);
             };
 
             recognition.onerror = (event: any) => {
-                 if (event.error === 'aborted' || event.error === 'no-speech') {
-                    console.log(`Speech recognition stopped: ${event.error}`);
-                    if (recordingRef.current && !isRecognitionActiveRef.current) {
-                        try {
-                           isRecognitionActiveRef.current = true;
-                           recognition.start();
-                        } catch(e) {
-                           console.error("Error restarting recognition:", e)
-                           isRecognitionActiveRef.current = false;
-                           setIsRecording(false);
-                        }
-                    } else {
-                       setIsRecording(false);
-                    }
-                    return;
+                console.error("Speech recognition error:", event.error);
+                
+                // Handle specific error types
+                switch (event.error) {
+                    case 'not-allowed':
+                        toast({
+                            variant: 'destructive',
+                            title: 'Microphone Permission Denied',
+                            description: 'Please allow microphone access in your browser settings.'
+                        });
+                        break;
+                    case 'no-speech':
+                        toast({
+                            title: 'No Speech Detected',
+                            description: 'Please speak clearly into the microphone.'
+                        });
+                        break;
+                    case 'audio-capture':
+                        toast({
+                            variant: 'destructive',
+                            title: 'Microphone Error',
+                            description: 'No microphone found or microphone is in use by another application.'
+                        });
+                        break;
+                    case 'network':
+                        toast({
+                            variant: 'destructive',
+                            title: 'Network Error',
+                            description: 'Network error occurred. Please check your internet connection.'
+                        });
+                        break;
+                    default:
+                        toast({
+                            variant: 'destructive',
+                            title: 'Speech Recognition Error',
+                            description: `Error: ${event.error}. Please try again.`
+                        });
                 }
                 
-                console.error("Speech recognition error", event.error);
-                toast({
-                    variant: 'destructive',
-                    title: 'Speech Recognition Error',
-                    description: `An error occurred: ${event.error}. Please ensure you have microphone permissions.`
-                });
                 isRecognitionActiveRef.current = false;
                 setIsRecording(false);
             };
             
             recognition.onend = () => {
+                console.log('Speech recognition ended');
                 isRecognitionActiveRef.current = false;
-                if (recordingRef.current && !isRecognitionActiveRef.current) {
-                   try {
-                     isRecognitionActiveRef.current = true;
-                     recognition.start();
-                   } catch(e) {
-                     console.error("Error restarting recognition onend:", e);
-                     isRecognitionActiveRef.current = false;
-                     setIsRecording(false);
-                   }
-                } else {
-                    setIsRecording(false);
-                }
+                setIsRecording(false);
             };
 
             recognitionRef.current = recognition;
@@ -231,36 +257,75 @@ export default function SpeechToIslPage() {
             toast({
                 variant: 'destructive',
                 title: 'Unsupported Browser',
-                description: 'Speech recognition is not supported by your browser.'
+                description: 'Speech recognition is not supported by your browser. Please use Chrome, Edge, or Safari.'
             });
         }
 
         return () => {
             if (recognitionRef.current) {
-                recognitionRef.current.stop();
+                try {
+                    recognitionRef.current.stop();
+                } catch (e) {
+                    console.log('Recognition already stopped');
+                }
             }
         };
 
-    }, [selectedLang, toast, finalTranscribedText]);
+    }, [selectedLang, toast]);
 
-    const handleMicClick = () => {
+    const handleMicClick = async () => {
         if (isRecording) {
-            recognitionRef.current?.stop();
+            // Stop recording
+            try {
+                recognitionRef.current?.stop();
+            } catch (e) {
+                console.log('Recognition already stopped');
+            }
             isRecognitionActiveRef.current = false;
             setIsRecording(false);
         } else {
+            // Start recording
+            if (micPermission === false) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Microphone Permission Required',
+                    description: 'Please allow microphone access and refresh the page.'
+                });
+                return;
+            }
+
+            // Clear previous data
             setTranscribedText('');
             setFinalTranscribedText('');
             setTranslatedText('');
             setIslPlaylist([]);
-            setIsRecording(true);
+            
+            // Check microphone availability before starting
             try {
-              isRecognitionActiveRef.current = true;
-              recognitionRef.current?.start();
-            } catch (e) {
-                console.error("Could not start recognition:", e);
-                isRecognitionActiveRef.current = false;
-                setIsRecording(false);
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                stream.getTracks().forEach(track => track.stop()); // Stop the test stream
+                
+                setIsRecording(true);
+                try {
+                    isRecognitionActiveRef.current = true;
+                    recognitionRef.current?.start();
+                } catch (e) {
+                    console.error("Could not start recognition:", e);
+                    isRecognitionActiveRef.current = false;
+                    setIsRecording(false);
+                    toast({
+                        variant: 'destructive',
+                        title: 'Recording Failed',
+                        description: 'Could not start speech recognition. Please try again.'
+                    });
+                }
+            } catch (error) {
+                console.error('Microphone not available:', error);
+                toast({
+                    variant: 'destructive',
+                    title: 'Microphone Not Available',
+                    description: 'Microphone is in use by another application or not available.'
+                });
             }
         }
     };
