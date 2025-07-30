@@ -141,10 +141,9 @@ export default function IslDatasetPage() {
                       <div className="flex justify-end">
                         <DialogTrigger asChild>
                           <Button 
-                            variant="outline" 
                             size="sm" 
                             onClick={() => handlePlayClick(video.path)}
-                            className="hover:bg-primary hover:text-primary-foreground"
+                            className="bg-[#0F9D58] text-white hover:bg-[#0F9D58]/90 border-[#0F9D58]"
                           >
                             <PlayCircle className="h-4 w-4 mr-1" />
                             Play
