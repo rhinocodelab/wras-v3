@@ -4,29 +4,21 @@
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import {
-  Table,
-  TableHeader,
-  TableRow,
-  TableHead,
-  TableBody,
-  TableCell,
-} from '@/components/ui/table';
-import {
   Dialog,
   DialogContent,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { getIslVideos } from '@/app/actions';
+import { getIslVideosWithMetadata, VideoMetadata } from '@/app/actions';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, FolderKanban, PlayCircle } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
+import { Loader2, FolderKanban, PlayCircle, FileVideo, Calendar, HardDrive, Clock } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
-const VIDEOS_PER_PAGE = 5;
+const VIDEOS_PER_PAGE = 10;
 
 export default function IslDatasetPage() {
-  const [videos, setVideos] = useState<string[]>([]);
+  const [videos, setVideos] = useState<VideoMetadata[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -37,9 +29,9 @@ export default function IslDatasetPage() {
     const fetchVideos = async () => {
       setIsLoading(true);
       try {
-        const videoPaths = await getIslVideos();
-        setVideos(videoPaths);
-        if (videoPaths.length === 0) {
+        const videoMetadata = await getIslVideosWithMetadata();
+        setVideos(videoMetadata);
+        if (videoMetadata.length === 0) {
           toast({
             title: 'No Videos Found',
             description: 'The ISL dataset directory is empty or does not exist.',
@@ -77,13 +69,20 @@ export default function IslDatasetPage() {
     }
   };
 
-  const handlePlayClick = (videoSrc: string) => {
+    const handlePlayClick = (videoSrc: string) => {
     setSelectedVideo(videoSrc);
     setIsModalOpen(true);
   }
 
-  const getFileName = (path: string) => {
-    return path.split('/').pop()?.replace('.mp4', '').replace(/_/g, ' ') ?? 'video';
+  const formatDuration = (seconds: number): string => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = Math.floor(seconds % 60);
+    
+    if (minutes > 0) {
+      return `${minutes}m ${remainingSeconds}s`;
+    } else {
+      return `${remainingSeconds}s`;
+    }
   }
 
   return (
@@ -97,6 +96,11 @@ export default function IslDatasetPage() {
           <p className="text-muted-foreground">
             A collection of pre-recorded ISL videos for various words and phrases.
           </p>
+          {videos.length > 0 && (
+            <p className="text-sm text-muted-foreground mt-1">
+              {videos.length} video{videos.length !== 1 ? 's' : ''} available • Page {currentPage} of {totalPages}
+            </p>
+          )}
         </div>
       </div>
 
@@ -107,34 +111,51 @@ export default function IslDatasetPage() {
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : videos.length > 0 ? (
-            <Card>
-              <CardContent className="pt-6">
-                <div className="rounded-md border">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Video Name</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {paginatedVideos.map((videoSrc) => (
-                        <TableRow key={videoSrc}>
-                          <TableCell className="font-medium capitalize">{getFileName(videoSrc)}</TableCell>
-                          <TableCell className="text-right">
-                             <DialogTrigger asChild>
-                                <Button variant="ghost" size="icon" onClick={() => handlePlayClick(videoSrc)}>
-                                    <PlayCircle className="h-5 w-5" />
-                                </Button>
-                            </DialogTrigger>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+              {paginatedVideos.map((video) => (
+                <Card key={video.path} className="hover:shadow-md transition-shadow">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium capitalize flex items-center gap-2">
+                      <FileVideo className="h-4 w-4 text-primary" />
+                      {video.name}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="h-3 w-3" />
+                          <span>ISL Video</span>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <HardDrive className="h-3 w-3" />
+                          <span>{(video.size / 1024 / 1024).toFixed(1)} MB</span>
+                        </div>
+                      </div>
+                      {video.duration && (
+                        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <Clock className="h-3 w-3" />
+                          <span>{formatDuration(video.duration)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-end">
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handlePlayClick(video.path)}
+                            className="hover:bg-primary hover:text-primary-foreground"
+                          >
+                            <PlayCircle className="h-4 w-4 mr-1" />
+                            Play
+                          </Button>
+                        </DialogTrigger>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           ) : (
             <div className="mt-6 text-center text-muted-foreground border rounded-lg p-12">
               <p>No videos found in the ISL dataset.</p>
@@ -171,7 +192,9 @@ export default function IslDatasetPage() {
 
         <DialogContent>
           <DialogHeader>
-            <DialogTitle className="capitalize">{selectedVideo ? getFileName(selectedVideo) : 'Video'}</DialogTitle>
+            <DialogTitle className="capitalize">
+              {selectedVideo ? videos.find(v => v.path === selectedVideo)?.name || 'Video' : 'Video'}
+            </DialogTitle>
           </DialogHeader>
           {selectedVideo && (
             <div className="mt-4">

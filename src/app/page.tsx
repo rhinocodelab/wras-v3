@@ -105,7 +105,7 @@ export default function HomePage() {
               {/* Core Management Section */}
               <div className="space-y-2">
                 <div className="px-2 py-1">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                     Core Management
                   </h3>
                 </div>
@@ -128,7 +128,7 @@ export default function HomePage() {
               {/* AI & Content Generation Section */}
               <div className="space-y-2">
                 <div className="px-2 py-1">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                     AI & Content Generation
                   </h3>
                 </div>
@@ -158,7 +158,7 @@ export default function HomePage() {
               {/* Sign Language (ISL) Section */}
               <div className="space-y-2">
                 <div className="px-2 py-1">
-                  <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                     Sign Language (ISL)
                   </h3>
                 </div>
@@ -217,7 +217,7 @@ export default function HomePage() {
                   {/* Core Management Section */}
                   <div className="space-y-2">
                     <div className="px-2 py-1">
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                         Core Management
                       </h3>
                     </div>
@@ -240,7 +240,7 @@ export default function HomePage() {
                   {/* AI & Content Generation Section */}
                   <div className="space-y-2">
                     <div className="px-2 py-1">
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                         AI & Content Generation
                       </h3>
                     </div>
@@ -270,7 +270,7 @@ export default function HomePage() {
                   {/* Sign Language (ISL) Section */}
                   <div className="space-y-2">
                     <div className="px-2 py-1">
-                      <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">
+                      <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                         Sign Language (ISL)
                       </h3>
                     </div>

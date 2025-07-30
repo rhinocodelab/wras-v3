@@ -477,6 +477,13 @@ export async function clearAllAudio() {
 }
 
 
+export type VideoMetadata = {
+  path: string;
+  name: string;
+  size: number;
+  duration?: number;
+};
+
 export async function getIslVideos(): Promise<string[]> {
   const baseDir = path.join(process.cwd(), 'public');
   const videoDir = path.join(baseDir, 'isl_dataset');
@@ -504,6 +511,73 @@ export async function getIslVideos(): Promise<string[]> {
   try {
     await fs.access(videoDir);
     return await findVideos(videoDir);
+  } catch (error) {
+    console.warn('ISL dataset directory does not exist or is not accessible.');
+    return [];
+  }
+}
+
+export async function getIslVideosWithMetadata(): Promise<VideoMetadata[]> {
+  const baseDir = path.join(process.cwd(), 'public');
+  const videoDir = path.join(baseDir, 'isl_dataset');
+
+  // Function to get video duration using ffprobe
+  const getVideoDuration = async (filePath: string): Promise<number | undefined> => {
+    try {
+      const { exec } = await import('child_process');
+      const { promisify } = await import('util');
+      const execAsync = promisify(exec);
+      
+      const command = `ffprobe -v quiet -show_entries format=duration -of csv=p=0 "${filePath}"`;
+      const { stdout } = await execAsync(command);
+      const duration = parseFloat(stdout.trim());
+      return isNaN(duration) ? undefined : duration;
+    } catch (error) {
+      console.warn(`Could not get duration for ${filePath}:`, error);
+      return undefined;
+    }
+  };
+
+  const findVideosWithMetadata = async (dir: string): Promise<VideoMetadata[]> => {
+    let videoFiles: VideoMetadata[] = [];
+    try {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          videoFiles = videoFiles.concat(await findVideosWithMetadata(fullPath));
+        } else if (entry.isFile() && entry.name.endsWith('.mp4')) {
+          try {
+            // Get file stats for size
+            const stats = await fs.stat(fullPath);
+            
+            // Get video duration
+            const duration = await getVideoDuration(fullPath);
+            
+            // Return the path relative to the 'public' directory
+            const relativePath = path.relative(baseDir, fullPath);
+            const webPath = `/${relativePath.replace(/\\/g, '/')}`;
+            
+            videoFiles.push({
+              path: webPath,
+              name: entry.name.replace('.mp4', '').replace(/_/g, ' '),
+              size: stats.size,
+              duration: duration
+            });
+          } catch (error) {
+            console.warn(`Could not get metadata for ${fullPath}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+       console.warn(`Could not read directory ${dir}:`, error);
+    }
+    return videoFiles;
+  };
+
+  try {
+    await fs.access(videoDir);
+    return await findVideosWithMetadata(videoDir);
   } catch (error) {
     console.warn('ISL dataset directory does not exist or is not accessible.');
     return [];
