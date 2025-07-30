@@ -199,10 +199,16 @@ export function Dashboard() {
     const { announcements, isl_video_playlist } = generatedData;
     const { 'Train Name': trainName, 'Train Number': trainNumber, 'Start Station': startStation, 'End Station': endStation, 'Start Code': startCode, 'End Code': endCode } = currentRouteInfo;
 
-    const tickerText = announcements.map(a => a.text).join(' &nbsp; | &nbsp; ');
-    
     // Convert relative paths to absolute URLs
     const baseUrl = window.location.origin;
+    
+    // Create language-specific data for synchronization
+    const announcementData = announcements.map(a => ({
+      language_code: a.language_code,
+      text: a.text,
+      audio_path: a.audio_path ? `${baseUrl}${a.audio_path}` : null
+    }));
+    const announcementDataJson = JSON.stringify(announcementData);
     
     // Convert audio paths to absolute URLs
     const audioPaths = announcements.map(a => a.audio_path).filter(p => p !== null);
@@ -223,15 +229,16 @@ export function Dashboard() {
         <style>
           body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; margin: 0; background-color: #000; color: #fff; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
           .main-content { flex-grow: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 20px; }
-          .info-header { text-align: center; margin-bottom: 20px; padding: 10px 20px; border-radius: 12px; background-color: rgba(255, 255, 255, 0.1); }
-          .info-header h1 { margin: 0; font-size: 2.5em; }
-          .info-header p { margin: 5px 0 0; font-size: 1.2em; letter-spacing: 1px; }
+          .info-header { text-align: center; margin-bottom: 20px; padding: 15px 25px; border-radius: 12px; background-color: rgba(255, 255, 255, 0.1); }
+          .info-header h1 { margin: 0; font-size: 3.2em; }
+          .info-header p { margin: 8px 0 0; font-size: 1.6em; letter-spacing: 1px; }
           .route { display: flex; align-items: center; justify-content: center; gap: 20px; }
-          .video-container { width: 80%; max-width: 960px; aspect-ratio: 16 / 9; background-color: #111; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+          .video-container { width: 80%; max-width: 960px; aspect-ratio: 16 / 9; background-color: #111; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
           video { width: 100%; height: 100%; object-fit: cover; }
-          .ticker-wrap { position: fixed; bottom: 0; left: 0; width: 100%; background-color: #1a1a1a; padding: 15px 0; overflow: hidden; }
-          .ticker { display: inline-block; white-space: nowrap; padding-left: 100%; animation: ticker 40s linear infinite; font-size: 1.5em; }
-          @keyframes ticker { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+          .ticker-wrap { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 1200px; background-color: #1a1a1a; padding: 20px; overflow: hidden; min-height: 80px; }
+          .ticker { display: block; text-align: center; font-size: 2.2em; transition: opacity 0.5s ease; line-height: 1.4; white-space: nowrap; margin: 0; }
+          .ticker.fade { opacity: 0.3; }
+          .ticker.active { opacity: 1; }
         </style>
       </head>
       <body>
@@ -249,7 +256,7 @@ export function Dashboard() {
           </div>
         </div>
         <div class="ticker-wrap">
-          <div class="ticker">${tickerText}</div>
+          <div id="ticker" class="ticker"></div>
         </div>
         <audio id="announcement-audio"></audio>
         <audio id="intro-audio" preload="auto"></audio>
@@ -258,8 +265,10 @@ export function Dashboard() {
           const videoElement = document.getElementById('isl-video');
           const audioPlayer = document.getElementById('announcement-audio');
           const introAudio = document.getElementById('intro-audio');
+          const tickerElement = document.getElementById('ticker');
           const videoPlaylist = ${videoSources};
           const audioPlaylist = ${audioSources};
+          const announcementData = ${announcementDataJson};
           const introAudioPath = '${baseUrl}/audio/intro_audio/intro.wav';
           let currentAudioIndex = 0;
           let isPlaying = false;
@@ -269,30 +278,58 @@ export function Dashboard() {
           introAudio.src = introAudioPath;
           introAudio.volume = 1.0;
 
+          function updateTickerText(languageCode) {
+            const announcement = announcementData.find(a => a.language_code === languageCode);
+            if (announcement && tickerElement) {
+              tickerElement.textContent = announcement.text;
+              tickerElement.classList.add('active');
+              tickerElement.classList.remove('fade');
+              
+              // Adjust card width based on text content
+              setTimeout(() => {
+                const tickerWrap = tickerElement.parentElement;
+                const textWidth = tickerElement.scrollWidth;
+                const minWidth = 800; // Minimum width in pixels
+                const maxWidth = 1800; // Maximum width in pixels
+                const padding = 40; // 20px left + 20px right padding
+                const newWidth = Math.max(minWidth, Math.min(maxWidth, textWidth + padding));
+                tickerWrap.style.width = newWidth + 'px';
+                tickerWrap.style.left = '50%';
+                tickerWrap.style.transform = 'translateX(-50%)';
+              }, 50); // Small delay to ensure text is rendered
+            }
+          }
+
+          function fadeTickerText() {
+            if (tickerElement) {
+              tickerElement.classList.add('fade');
+              tickerElement.classList.remove('active');
+            }
+          }
+
           function playIntroThenAnnouncement() {
             if (!audioPlayer || audioPlaylist.length === 0) return;
             
-            if (currentAudioIndex < audioPlaylist.length) {
-              // Play intro first
-              isPlayingIntro = true;
-              introAudio.play().catch(e => console.error("Intro audio play error:", e));
+            // Play intro first
+            isPlayingIntro = true;
+            fadeTickerText(); // Fade out current text during intro
+            
+            // Reset intro audio event listener
+            introAudio.onended = () => {
+              isPlayingIntro = false;
+              audioPlayer.src = audioPlaylist[currentAudioIndex];
               
-              // When intro ends, play the announcement
-              introAudio.onended = () => {
-                isPlayingIntro = false;
-                audioPlayer.src = audioPlaylist[currentAudioIndex];
-                audioPlayer.play().catch(e => console.error("Audio play error:", e));
-                currentAudioIndex++;
-              };
-            } else {
-              // Reset to start for continuous loop
-              currentAudioIndex = 0;
-              setTimeout(() => {
-                if (isPlaying) {
-                  playIntroThenAnnouncement();
-                }
-              }, 1000); // 1 second pause before restarting
-            }
+              // Update ticker text to match the current audio language
+              const currentAnnouncement = announcementData[currentAudioIndex];
+              if (currentAnnouncement) {
+                updateTickerText(currentAnnouncement.language_code);
+              }
+              
+              audioPlayer.play().catch(e => console.error("Audio play error:", e));
+              currentAudioIndex++;
+            };
+            
+            introAudio.play().catch(e => console.error("Intro audio play error:", e));
           }
           
           function startPlayback() {
@@ -300,18 +337,40 @@ export function Dashboard() {
                 videoElement.src = videoPlaylist[0];
                 videoElement.loop = true;
                 videoElement.play().catch(e => console.error("Video play error:", e));
+                
+                // Ensure video restarts when it ends (backup for loop)
+                videoElement.addEventListener('ended', () => {
+                  videoElement.currentTime = 0;
+                  videoElement.play().catch(e => console.error("Video restart error:", e));
+                });
              }
              if (audioPlaylist.length > 0) {
                 isPlaying = true;
-                audioPlayer.oncanplay = () => {
-                    audioPlayer.play().catch(e => console.error("Audio play error:", e));
-                    audioPlayer.oncanplay = null; // Prevent re-triggering
+                
+                // Initialize ticker with first language text
+                if (announcementData.length > 0) {
+                  updateTickerText(announcementData[0].language_code);
                 }
+                
                 playIntroThenAnnouncement();
              }
           }
 
-          audioPlayer.addEventListener('ended', playIntroThenAnnouncement);
+          // Handle announcement audio ending
+          audioPlayer.addEventListener('ended', () => {
+            if (isPlaying && currentAudioIndex < audioPlaylist.length) {
+              // Continue to next announcement
+              playIntroThenAnnouncement();
+            } else if (isPlaying) {
+              // All announcements finished, restart the cycle
+              currentAudioIndex = 0;
+              setTimeout(() => {
+                if (isPlaying) {
+                  playIntroThenAnnouncement();
+                }
+              }, 1000); // 1 second pause before restarting
+            }
+          });
           
           // Use a more reliable event to start playback
           window.addEventListener('load', startPlayback, { once: true });
