@@ -14,6 +14,7 @@ import {
   Speech,
   Text,
   FileAudio,
+  Hand,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
@@ -31,6 +32,7 @@ import AnnouncementTemplatesPage from '@/app/announcement-templates/page';
 import SpeechToIslPage from '@/app/speech-to-isl/page';
 import TextToIslPage from '@/app/text-to-isl/page';
 import AudioFileToIslPage from '@/app/audio-file-to-isl/page';
+import AIGeneratedAnnouncementsPage from '@/app/ai-generated-announcements/page';
 
 
 export default function HomePage() {
@@ -65,6 +67,8 @@ export default function HomePage() {
         return <TextToIslPage />;
       case 'audio-file-to-isl':
         return <AudioFileToIslPage />;
+      case 'ai-generated-announcements':
+        return <AIGeneratedAnnouncementsPage />;
       default:
         return <Dashboard />;
     }
@@ -152,6 +156,13 @@ export default function HomePage() {
                 >
                   <Database className="h-4 w-4" />
                   AI Generated Assets
+                </div>
+                <div
+                  onClick={() => setActiveView('ai-generated-announcements')}
+                  className={getLinkClassName('ai-generated-announcements')}
+                >
+                  <Hand className="h-4 w-4" />
+                  AI Gen ISL Announcement
                 </div>
               </div>
 
@@ -264,6 +275,13 @@ export default function HomePage() {
                     >
                       <Database className="h-5 w-5" />
                       AI Generated Assets
+                    </div>
+                    <div
+                      onClick={() => setActiveView('ai-generated-announcements')}
+                      className={getMobileLinkClassName('ai-generated-announcements')}
+                    >
+                      <Hand className="h-5 w-5" />
+                      AI Gen ISL Announcement
                     </div>
                   </div>
 

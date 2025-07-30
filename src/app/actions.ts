@@ -117,6 +117,27 @@ export async function getDb() {
     )
   `);
 
+  // Saved ISL Announcements Table
+  await db.exec(`
+    CREATE TABLE IF NOT EXISTS saved_isl_announcements (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      train_route_id INTEGER NOT NULL,
+      train_number TEXT NOT NULL,
+      train_name TEXT NOT NULL,
+      platform TEXT NOT NULL,
+      category TEXT NOT NULL,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      folder_path TEXT NOT NULL,
+      published_html_path TEXT,
+      audio_files TEXT, -- JSON: {en: "path", hi: "path", mr: "path", gu: "path"}
+      isl_video_files TEXT, -- JSON: Array of video file paths
+      announcement_texts TEXT, -- JSON: {en: "text", hi: "text", mr: "text", gu: "text"}
+      status TEXT DEFAULT 'active', -- active, archived, deleted
+      FOREIGN KEY (train_route_id) REFERENCES train_routes(id) ON DELETE CASCADE
+    )
+  `);
+
   return db;
 }
 
@@ -1247,5 +1268,184 @@ export async function checkTemplateAudioExists(category: string): Promise<boolea
     return false;
   } finally {
     await db.close();
+  }
+}
+
+// Saved ISL Announcements Types and Functions
+export type SavedAnnouncement = {
+  id?: number;
+  train_route_id: number;
+  train_number: string;
+  train_name: string;
+  platform: string;
+  category: string;
+  folder_path: string;
+  published_html_path?: string;
+  audio_files: { [key: string]: string }; // {en: "path", hi: "path", mr: "path", gu: "path"}
+  isl_video_files: string[]; // Array of video file paths
+  announcement_texts: { [key: string]: string }; // {en: "text", hi: "text", mr: "text", gu: "text"}
+  status?: string;
+  created_at?: string;
+  updated_at?: string;
+};
+
+export async function saveAnnouncementToDatabase(announcement: SavedAnnouncement): Promise<number> {
+  const db = await getDb();
+  try {
+    const result = await db.run(`
+      INSERT INTO saved_isl_announcements (
+        train_route_id, train_number, train_name, platform, category,
+        folder_path, published_html_path, audio_files, isl_video_files, announcement_texts
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `, 
+    announcement.train_route_id,
+    announcement.train_number,
+    announcement.train_name,
+    announcement.platform,
+    announcement.category,
+    announcement.folder_path,
+    announcement.published_html_path || null,
+    JSON.stringify(announcement.audio_files),
+    JSON.stringify(announcement.isl_video_files),
+    JSON.stringify(announcement.announcement_texts)
+    );
+    
+    await db.close();
+    return result.lastID || 0;
+  } catch (error) {
+    await db.close();
+    throw error;
+  }
+}
+
+export async function getSavedAnnouncements(): Promise<SavedAnnouncement[]> {
+  const db = await getDb();
+  try {
+    const results = await db.all(`
+      SELECT * FROM saved_isl_announcements 
+      WHERE status = 'active' 
+      ORDER BY created_at DESC
+    `);
+    
+    await db.close();
+    
+    return results.map(row => ({
+      id: row.id,
+      train_route_id: row.train_route_id,
+      train_number: row.train_number,
+      train_name: row.train_name,
+      platform: row.platform,
+      category: row.category,
+      folder_path: row.folder_path,
+      published_html_path: row.published_html_path,
+      audio_files: JSON.parse(row.audio_files || '{}'),
+      isl_video_files: JSON.parse(row.isl_video_files || '[]'),
+      announcement_texts: JSON.parse(row.announcement_texts || '{}'),
+      status: row.status,
+      created_at: row.created_at,
+      updated_at: row.updated_at
+    }));
+  } catch (error) {
+    await db.close();
+    throw error;
+  }
+}
+
+export async function saveAnnouncementToFiles(
+  trainNumber: string,
+  platform: string,
+  category: string,
+  announcements: any[],
+  islVideoPlaylist: string[]
+): Promise<{ audioFiles: { [key: string]: string }, islVideoFiles: string[], announcementTexts: { [key: string]: string } }> {
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  
+  try {
+    // Create folder structure for saved announcement
+    const folderName = `${trainNumber}_${platform}_${category}`;
+    const savedAnnouncementsDir = path.join(process.cwd(), 'public', 'saved_announcements', folderName);
+    
+    // Create directories
+    await fs.mkdir(savedAnnouncementsDir, { recursive: true });
+    await fs.mkdir(path.join(savedAnnouncementsDir, 'audio'), { recursive: true });
+    await fs.mkdir(path.join(savedAnnouncementsDir, 'isl_videos'), { recursive: true });
+    
+    // Copy audio files
+    const audioFiles: { [key: string]: string } = {};
+    for (const announcement of announcements) {
+      if (announcement.audio_path) {
+        const sourcePath = path.join(process.cwd(), 'public', announcement.audio_path);
+        const fileName = `${announcement.language_code}_announcement.wav`;
+        const destPath = path.join(savedAnnouncementsDir, 'audio', fileName);
+        
+        await fs.copyFile(sourcePath, destPath);
+        audioFiles[announcement.language_code] = `/saved_announcements/${folderName}/audio/${fileName}`;
+      }
+    }
+    
+    // Copy ISL video files
+    const islVideoFiles: string[] = [];
+    for (let i = 0; i < islVideoPlaylist.length; i++) {
+      const sourcePath = path.join(process.cwd(), 'public', islVideoPlaylist[i]);
+      const fileName = `video_${i + 1}.mp4`;
+      const destPath = path.join(savedAnnouncementsDir, 'isl_videos', fileName);
+      
+      await fs.copyFile(sourcePath, destPath);
+      islVideoFiles.push(`/saved_announcements/${folderName}/isl_videos/${fileName}`);
+    }
+    
+    // Create announcement texts object
+    const announcementTexts: { [key: string]: string } = {};
+    for (const announcement of announcements) {
+      announcementTexts[announcement.language_code] = announcement.text;
+    }
+    
+    return { audioFiles, islVideoFiles, announcementTexts };
+  } catch (error) {
+    console.error('Failed to save announcement files:', error);
+    throw error;
+  }
+}
+
+export async function deleteAnnouncement(id: number): Promise<boolean> {
+  const fs = await import('fs/promises');
+  const path = await import('path');
+  const db = await getDb();
+  
+  try {
+    // Get announcement details before deletion
+    const announcement = await db.get(`
+      SELECT * FROM saved_isl_announcements 
+      WHERE id = ?
+    `, [id]);
+    
+    if (!announcement) {
+      throw new Error('Announcement not found');
+    }
+    
+    // Delete from database (soft delete by setting status to 'deleted')
+    await db.run(`
+      UPDATE saved_isl_announcements 
+      SET status = 'deleted', updated_at = CURRENT_TIMESTAMP 
+      WHERE id = ?
+    `, [id]);
+    
+    // Delete files from filesystem
+    if (announcement.folder_path) {
+      const folderPath = path.join(process.cwd(), 'public', announcement.folder_path);
+      try {
+        await fs.rm(folderPath, { recursive: true, force: true });
+      } catch (fileError) {
+        console.warn('Failed to delete files, but database record was updated:', fileError);
+      }
+    }
+    
+    await db.close();
+    return true;
+  } catch (error) {
+    await db.close();
+    console.error('Failed to delete announcement:', error);
+    throw error;
   }
 }
