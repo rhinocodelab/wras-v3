@@ -251,7 +251,7 @@ export default function AiDatabasePage({ onViewChange }: { onViewChange: (view: 
           <CardHeader>
             <CardTitle className="text-xl">AI Custom Audio</CardTitle>
             <CardDescription>
-              View and manage all saved custom audio files generated using Google Cloud TTS Chirp3 HD voices.
+              View and manage all saved custom audio files.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-2">

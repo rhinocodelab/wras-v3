@@ -657,7 +657,13 @@ export function Dashboard() {
                             <Button onClick={handleSearchByNumber}>Search</Button>
                             <Dialog open={isRouteModalOpen} onOpenChange={setIsRouteModalOpen}>
                                 <DialogTrigger asChild>
-                                    <Button variant="secondary" onClick={() => setSelectedRoutes([])} disabled={allRoutes.length === 0}>Pick Route</Button>
+                                    <Button 
+                                        style={{ backgroundColor: '#0F9D58', color: 'white' }}
+                                        onClick={() => setSelectedRoutes([])} 
+                                        disabled={allRoutes.length === 0}
+                                    >
+                                        Pick Route
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-2xl">
                                     <DialogHeader>
@@ -719,7 +725,13 @@ export function Dashboard() {
                             <Button onClick={handleSearchByName}>Search</Button>
                             <Dialog open={isRouteModalOpen} onOpenChange={setIsRouteModalOpen}>
                                 <DialogTrigger asChild>
-                                    <Button variant="secondary" onClick={() => setSelectedRoutes([])} disabled={allRoutes.length === 0}>Pick Route</Button>
+                                    <Button 
+                                        style={{ backgroundColor: '#0F9D58', color: 'white' }}
+                                        onClick={() => setSelectedRoutes([])} 
+                                        disabled={allRoutes.length === 0}
+                                    >
+                                        Pick Route
+                                    </Button>
                                 </DialogTrigger>
                                 <DialogContent className="sm:max-w-2xl">
                                     <DialogHeader>

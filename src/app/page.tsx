@@ -94,13 +94,13 @@ export default function HomePage() {
   };
 
   return (
-    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-4">
+    <div className="flex min-h-screen w-full flex-col items-center justify-center bg-muted/40 p-0">
       <div className="flex h-full w-full max-w-7xl flex-1 rounded-lg bg-background shadow-lg">
-        <aside className="hidden w-60 flex-col border-r bg-background sm:flex">
+        <aside className="hidden w-72 flex-col border-r bg-background sm:flex">
           <div className="flex h-16 items-center border-b px-6">
               <div className="flex items-center gap-2 font-semibold text-primary">
                   <TramFront className="h-6 w-6" />
-                  <span className="text-lg font-bold text-primary">WRAS-DHH</span>
+                  <span className="text-xl font-bold text-primary">WRAS-DHH</span>
               </div>
           </div>
           <nav className="flex-1 overflow-auto py-4">
@@ -108,7 +108,7 @@ export default function HomePage() {
               {/* Core Management Section */}
               <div className="space-y-2">
                 <div className="px-2 py-1">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
+                  <h3 className="text-base font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                     Core Management
                   </h3>
                 </div>
@@ -131,7 +131,7 @@ export default function HomePage() {
               {/* AI & Content Generation Section */}
               <div className="space-y-2">
                 <div className="px-2 py-1">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
+                  <h3 className="text-base font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                     AI & Content Generation
                   </h3>
                 </div>
@@ -168,7 +168,7 @@ export default function HomePage() {
               {/* Sign Language (ISL) Section */}
               <div className="space-y-2">
                 <div className="px-2 py-1">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
+                  <h3 className="text-base font-semibold uppercase tracking-wider" style={{ color: '#F4B400' }}>
                     Sign Language (ISL)
                   </h3>
                 </div>
@@ -323,15 +323,9 @@ export default function HomePage() {
                 </nav>
               </SheetContent>
             </Sheet>
-            <div className="flex h-16 items-center border-b px-6 sm:hidden">
-                <div className="flex items-center gap-2 font-semibold text-primary">
-                    <TramFront className="h-6 w-6" />
-                    <span className="text-lg font-bold text-primary">WRAS-DHH</span>
-                </div>
-            </div>
             <div className="ml-auto flex items-center gap-4">
               {session && (
-                <div className="flex items-center gap-2 text-sm font-medium">
+                <div className="flex items-center gap-2 text-base font-medium">
                   <span>Welcome, {session.name}</span>
                 </div>
               )}
@@ -343,8 +337,8 @@ export default function HomePage() {
               {renderContent()}
             </main>
             <footer className="border-t bg-background p-3">
-              <div className="text-center text-sm text-muted-foreground">
-                  Designed and Developed by Sundyne Technologies copyright 2025
+              <div className="text-center text-sm text-purple-600">
+                  Designed and Developed by <a href="https://www.sundynegroup.com/" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Sundyne Technologies</a> © 2025
               </div>
             </footer>
           </div>
