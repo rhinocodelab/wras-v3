@@ -6,6 +6,14 @@ import { Toaster } from "@/components/ui/toaster";
 export const metadata: Metadata = {
   title: 'WRAS-DDH',
   description: 'Western Railway Announcement System for Deaf and Hard of Hearing',
+  icons: {
+    icon: [
+      {
+        url: '/train-icon.svg',
+        type: 'image/svg+xml',
+      },
+    ],
+  },
 };
 
 export default function RootLayout({
