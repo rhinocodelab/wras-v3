@@ -45,8 +45,8 @@ export default async function LoginPage() {
         </div>
       </main>
       <footer className="border-t bg-white p-3">
-        <div className="text-center text-sm text-purple-600">
-          Designed and Developed by <a href="https://www.sundynegroup.com/" target="_blank" rel="noopener noreferrer" className="text-purple-600 hover:text-purple-800 underline">Sundyne Technologies</a> © 2025
+        <div className="text-center text-base font-bold text-muted-foreground">
+          Designed and Developed by <a href="https://www.sundynegroup.com/" target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-foreground underline">Sundyne Technologies</a> © 2025
         </div>
       </footer>
     </div>
