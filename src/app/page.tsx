@@ -14,7 +14,6 @@ import {
   Speech,
   Text,
   FileAudio,
-  Hand,
 } from 'lucide-react';
 import Link from 'next/link';
 import { Sheet, SheetTrigger, SheetContent } from '@/components/ui/sheet';
@@ -161,7 +160,7 @@ export default function HomePage() {
                   onClick={() => setActiveView('ai-generated-announcements')}
                   className={getLinkClassName('ai-generated-announcements')}
                 >
-                  <Hand className="h-4 w-4" />
+                  <ClipboardList className="h-4 w-4" />
                   AI Gen ISL Announcement
                 </div>
               </div>
@@ -280,7 +279,7 @@ export default function HomePage() {
                       onClick={() => setActiveView('ai-generated-announcements')}
                       className={getMobileLinkClassName('ai-generated-announcements')}
                     >
-                      <Hand className="h-5 w-5" />
+                      <ClipboardList className="h-5 w-5" />
                       AI Gen ISL Announcement
                     </div>
                   </div>
