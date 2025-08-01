@@ -21,7 +21,7 @@ export default async function LoginPage() {
           <div className="flex flex-col md:flex-row">
             <div className="flex w-full flex-col items-center justify-center bg-primary p-8 text-white md:w-1/2 relative">
               <div className="absolute top-4 left-1/2 transform -translate-x-1/2">
-                <div className="text-3xl font-bold text-white/20 select-none">
+                <div className="text-4xl font-bold text-white/20 select-none">
                   POC DEMO
                 </div>
               </div>
@@ -29,17 +29,17 @@ export default async function LoginPage() {
                 <div className="mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-white/20">
                   <TramFront className="h-6 w-6 text-white" />
                 </div>
-                <h1 className="mb-2 text-lg font-bold">WRAS-DHH</h1>
-                <p className="mb-3 text-xs leading-relaxed text-blue-100">
+                <h1 className="mb-2 text-xl font-bold">WRAS-DHH</h1>
+                <p className="mb-3 text-sm leading-relaxed text-blue-100">
                   Western Railway Announcement System
                   <br />
                   for Deaf and Hard of Hearing
                 </p>
                 <div className="mx-auto mb-3 h-0.5 w-12 bg-white/30"></div>
-                <p className="text-xs text-blue-100">
+                <p className="text-sm text-blue-100">
                   Empowering accessibility through
                   <br />
-                  visual railway announcements
+                  AI-powered visual railway announcements
                 </p>
               </div>
             </div>
