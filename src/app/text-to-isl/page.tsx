@@ -458,21 +458,61 @@ export default function TextToIslPage() {
         
         setIsGeneratingVideo(true);
         try {
-            const playlist = await getIslVideoPlaylist(englishText);
-            setIslPlaylist(playlist);
+            const result = await getIslVideoPlaylist(englishText);
+            setIslPlaylist(result.playlist);
             
             // Set the first video as the ISL video path for publishing
-            if (playlist.length > 0) {
-                setIslVideoPath(playlist[0]);
+            if (result.playlist.length > 0) {
+                setIslVideoPath(result.playlist[0]);
             }
             
-            const videoCount = playlist.length;
-            const isStitched = playlist.length === 1 && playlist[0].includes('isl_announcement_');
+            const videoCount = result.playlist.length;
+            const isStitched = result.playlist.length === 1 && result.playlist[0].includes('isl_announcement_');
             
-            toast({
-                title: "ISL Video Generated",
-                description: "ISL video has been generated successfully."
-            });
+            // Show toast based on results
+            if (result.playlist.length === 0) {
+                // No videos generated at all - clear audio files
+                const unmatchedText = result.unmatchedWords.join(', ');
+                
+                // Clear audio files from public folder
+                try {
+                    const clearFilesResponse = await fetch('/api/clear-text-to-isl-files', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    });
+
+                    if (!clearFilesResponse.ok) {
+                        console.error('Failed to clear audio files');
+                    }
+                } catch (error) {
+                    console.error('Error clearing audio files:', error);
+                }
+                
+                // Clear saved audio files state
+                setSavedAudioFiles({});
+                
+                toast({
+                    title: "No ISL Videos Found",
+                    description: `No matching ISL videos found for any words: ${unmatchedText}. Audio files have been cleared.`,
+                    variant: "destructive"
+                });
+            } else if (result.unmatchedWords.length > 0) {
+                // Some videos generated, but some words unmatched
+                const unmatchedText = result.unmatchedWords.join(', ');
+                toast({
+                    title: "ISL Video Generated",
+                    description: `ISL video generated successfully. No matching videos found for: ${unmatchedText}`,
+                    variant: "default"
+                });
+            } else {
+                // All words matched
+                toast({
+                    title: "ISL Video Generated",
+                    description: "ISL video has been generated successfully."
+                });
+            }
         } catch (error) {
             console.error("Video generation failed:", error);
             toast({

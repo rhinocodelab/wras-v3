@@ -768,8 +768,8 @@ async function stitchVideosWithFfmpeg(videoPaths: string[], outputFileName: stri
     }
 }
 
-export async function getIslVideoPlaylist(text: string): Promise<string[]> {
-    if (!text) return [];
+export async function getIslVideoPlaylist(text: string): Promise<{ playlist: string[]; unmatchedWords: string[] }> {
+    if (!text) return { playlist: [], unmatchedWords: [] };
 
     const allVideoPaths = await getIslVideos();
     const videoMap = new Map<string, string>();
@@ -799,6 +799,7 @@ export async function getIslVideoPlaylist(text: string): Promise<string[]> {
     });
     
     const playlist: string[] = [];
+    const unmatchedWords: string[] = [];
     let i = 0;
     
     while (i < processedWords.length) {
@@ -820,6 +821,9 @@ export async function getIslVideoPlaylist(text: string): Promise<string[]> {
             // If no phrase match, check for single word
             if (videoMap.has(currentWord)) {
                 playlist.push(videoMap.get(currentWord)!);
+            } else {
+                // Track unmatched words
+                unmatchedWords.push(currentWord);
             }
             i++;
         }
@@ -830,13 +834,13 @@ export async function getIslVideoPlaylist(text: string): Promise<string[]> {
         const outputFileName = `isl_announcement_${Date.now()}.mp4`;
         const stitchedVideo = await stitchVideosWithFfmpeg(playlist, outputFileName);
         if (stitchedVideo) {
-            return [stitchedVideo];
+            return { playlist: [stitchedVideo], unmatchedWords };
         } else {
-            return playlist;
+            return { playlist, unmatchedWords };
         }
     }
     
-    return [];
+    return { playlist: [], unmatchedWords };
 }
 
 export async function handleGenerateAnnouncement(input: AnnouncementInput): Promise<AnnouncementOutput> {
@@ -846,7 +850,8 @@ export async function handleGenerateAnnouncement(input: AnnouncementInput): Prom
   if (englishAnnouncement && englishAnnouncement.text) {
       // Add spaces between digits for ISL video generation
       const processedText = englishAnnouncement.text.replace(/(\d)/g, ' $1 ');
-      announcementData.isl_video_playlist = await getIslVideoPlaylist(processedText);
+      const result = await getIslVideoPlaylist(processedText);
+      announcementData.isl_video_playlist = result.playlist;
   } else {
       announcementData.isl_video_playlist = [];
   }

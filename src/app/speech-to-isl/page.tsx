@@ -163,8 +163,34 @@ export default function SpeechToIslPage() {
         
         setIsGeneratingVideo(true);
         try {
-            const playlist = await getIslVideoPlaylist(translatedText);
+            const result = await getIslVideoPlaylist(translatedText);
+            const playlist = result.playlist;
             setIslPlaylist(playlist);
+            
+            // Show toast based on results
+            if (result.playlist.length === 0) {
+                // No videos generated at all
+                const unmatchedText = result.unmatchedWords.join(', ');
+                toast({
+                    title: "No ISL Videos Found",
+                    description: `No matching ISL videos found for any words: ${unmatchedText}`,
+                    variant: "destructive"
+                });
+            } else if (result.unmatchedWords.length > 0) {
+                // Some videos generated, but some words unmatched
+                const unmatchedText = result.unmatchedWords.join(', ');
+                toast({
+                    title: "ISL Video Generated",
+                    description: `ISL video generated successfully. No matching videos found for: ${unmatchedText}`,
+                    variant: "default"
+                });
+            } else {
+                // All words matched
+                toast({
+                    title: "ISL Video Generated",
+                    description: "ISL video has been generated successfully."
+                });
+            }
         } catch (error) {
              console.error("ISL generation failed:", error);
             toast({
