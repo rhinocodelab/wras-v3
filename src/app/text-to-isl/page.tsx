@@ -656,6 +656,7 @@ export default function TextToIslPage() {
             <div className="flex items-center justify-between p-6 border-b">
                 <div>
                     <h1 className="text-lg font-semibold md:text-2xl flex items-center gap-2">
+                        <Text className="h-6 w-6 text-primary" />
                         Text to ISL Converter
                     </h1>
                     <p className="text-muted-foreground mt-2">

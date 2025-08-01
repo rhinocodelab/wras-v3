@@ -2,6 +2,7 @@ import { getSession } from '@/app/actions';
 import { redirect } from 'next/navigation';
 import { LoginForm } from '@/components/login-form';
 import { TramFront } from 'lucide-react';
+import Head from 'next/head';
 
 export default async function LoginPage() {
   const session = await getSession();
@@ -10,7 +11,11 @@ export default async function LoginPage() {
   }
 
   return (
-    <div className="flex min-h-screen w-full flex-col bg-gray-100">
+    <>
+      <Head>
+        <link rel="icon" type="image/svg+xml" href="/train-icon.svg" />
+      </Head>
+      <div className="flex min-h-screen w-full flex-col bg-gray-100">
       <main className="flex flex-1 items-center justify-center p-4">
         <div className="w-full max-w-3xl overflow-hidden rounded-lg bg-white shadow-2xl">
           <div className="flex flex-col md:flex-row">
@@ -50,5 +55,6 @@ export default async function LoginPage() {
         </div>
       </footer>
     </div>
+    </>
   );
 }
